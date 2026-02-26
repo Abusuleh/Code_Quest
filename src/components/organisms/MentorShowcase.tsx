@@ -52,12 +52,12 @@ export function MentorShowcase() {
         {mentors.map((mentor, index) => {
           const accentClass =
             mentor.accent === "cyan"
-              ? "from-cq-cyan/30 to-cq-cyan/5 text-cq-cyan"
+              ? "from-cq-cyan/30 to-cq-cyan/5 text-cq-cyan group-hover:shadow-[0_0_24px_rgba(0,212,255,0.45)]"
               : mentor.accent === "green"
-                ? "from-cq-green/30 to-cq-green/5 text-cq-green"
+                ? "from-cq-green/30 to-cq-green/5 text-cq-green group-hover:shadow-[0_0_24px_rgba(0,229,160,0.45)]"
                 : mentor.accent === "red"
-                  ? "from-cq-red/30 to-cq-red/5 text-cq-red"
-                  : "from-cq-violet/30 to-cq-violet/5 text-cq-violet";
+                  ? "from-cq-red/30 to-cq-red/5 text-cq-red group-hover:shadow-[0_0_24px_rgba(255,77,109,0.45)]"
+                  : "from-cq-violet/30 to-cq-violet/5 text-cq-violet group-hover:shadow-[0_0_24px_rgba(176,107,255,0.45)]";
           return (
             <motion.div
               key={mentor.name}
