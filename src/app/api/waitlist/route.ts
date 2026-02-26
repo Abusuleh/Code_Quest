@@ -22,8 +22,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Email not configured" }, { status: 500 });
     }
 
+    const fromAddress = process.env.RESEND_FROM ?? "CodeQuest <hello@codequest.world>";
+
     await resend.emails.send({
-      from: "CodeQuest <hello@codequest.world>",
+      from: fromAddress,
       to: email,
       subject: "Your CodeQuest adventure is about to begin 🚀",
       react: WaitlistWelcome({ email }),
