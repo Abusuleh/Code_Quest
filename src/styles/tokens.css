@@ -1,0 +1,62 @@
+:root {
+  /* Color Palette */
+  --cq-bg-base: #0a0a0f;
+  --cq-bg-panel: #12111a;
+  --cq-bg-elevated: #1c1b27;
+  --cq-bg-overlay: #26253a;
+
+  --cq-primary: #6c3fe8;
+  --cq-primary-glow: #6c3fe840;
+  --cq-cyan: #00d4ff;
+  --cq-gold: #f5a623;
+  --cq-green: #00e5a0;
+  --cq-red: #ff4d6d;
+  --cq-violet: #b06bff;
+
+  --cq-text-primary: #f4f4f8;
+  --cq-text-secondary: #a8a8bc;
+  --cq-text-disabled: #5a5a72;
+
+  --cq-border: #302e4a;
+  --cq-border-bright: #504e6a;
+
+  /* Typography */
+  --font-display: "Orbitron", sans-serif;
+  --font-heading: "Space Grotesk", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --font-code: "JetBrains Mono", monospace;
+
+  /* Spacing Scale */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+  --sp-20: 80px;
+  --sp-24: 96px;
+
+  /* Border Radius */
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-xl: 24px;
+  --r-full: 9999px;
+
+  /* Shadows & Glows */
+  --shadow-panel: 0 4px 24px rgba(0, 0, 0, 0.4);
+  --glow-primary: 0 0 20px rgba(108, 63, 232, 0.4);
+  --glow-cyan: 0 0 20px rgba(0, 212, 255, 0.4);
+  --glow-gold: 0 0 20px rgba(245, 166, 35, 0.4);
+
+  /* Transitions */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-slow: 400ms;
+}

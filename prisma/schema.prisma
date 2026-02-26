@@ -1,0 +1,263 @@
+// schema.prisma — CodeQuest Platform
+// Database: PostgreSQL (Neon Serverless)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ── ACCOUNTS ──────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  role          UserRole  @default(PARENT)
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  children      Child[]
+  subscription  Subscription?
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model Child {
+  id            String   @id @default(cuid())
+  parentId      String
+  parent        User     @relation(fields: [parentId], references: [id])
+  username      String   @unique
+  displayName   String
+  dateOfBirth   DateTime
+  avatarConfig  Json
+  currentPhase  Int      @default(1)
+  currentModule String?
+  xpTotal       Int      @default(0)
+  xpLevel       Int      @default(1)
+  streakCurrent Int      @default(0)
+  streakLongest Int      @default(0)
+  streakLastAt  DateTime?
+  gems          Int      @default(0)
+  guildId       String?
+  guild         Guild?   @relation(fields: [guildId], references: [id])
+  progress      Progress[]
+  achievements  ChildAchievement[]
+  projects      Project[]
+  skillCards    ChildSkillCard[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ── CURRICULUM ────────────────────────────────────────
+
+model Phase {
+  id      String   @id
+  number  Int      @unique
+  title   String
+  kingdom String
+  mentor  String
+  ageMin  Int
+  ageMax  Int
+  colorHex String
+  modules Module[]
+}
+
+model Module {
+  id          String  @id @default(cuid())
+  phaseId     String
+  phase       Phase   @relation(fields: [phaseId], references: [id])
+  order       Int
+  title       String
+  description String
+  weeks       Int
+  skills      String[]
+  lessons     Lesson[]
+}
+
+model Lesson {
+  id           String     @id @default(cuid())
+  moduleId     String
+  module       Module     @relation(fields: [moduleId], references: [id])
+  order        Int
+  title        String
+  type         LessonType
+  content      Json
+  xpReward     Int        @default(50)
+  gemReward    Int        @default(0)
+  estimatedMin Int        @default(15)
+  progress     Progress[]
+}
+
+// ── PROGRESS & XP ─────────────────────────────────────
+
+model Progress {
+  id          String         @id @default(cuid())
+  childId     String
+  child       Child          @relation(fields: [childId], references: [id])
+  lessonId    String
+  lesson      Lesson         @relation(fields: [lessonId], references: [id])
+  status      ProgressStatus @default(NOT_STARTED)
+  attempts    Int            @default(0)
+  score       Int?
+  xpEarned    Int            @default(0)
+  completedAt DateTime?
+  code        String?
+  startedAt   DateTime       @default(now())
+
+  @@unique([childId, lessonId])
+}
+
+model XPEvent {
+  id        String      @id @default(cuid())
+  childId   String
+  type      XPEventType
+  amount    Int
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@index([childId, createdAt])
+}
+
+// ── ACHIEVEMENTS & GAMIFICATION ───────────────────────
+
+model Achievement {
+  id          String             @id @default(cuid())
+  key         String             @unique
+  title       String
+  description String
+  iconUrl     String
+  xpReward    Int
+  gemReward   Int
+  rarity      AchievementRarity
+  children    ChildAchievement[]
+}
+
+model ChildAchievement {
+  id            String       @id @default(cuid())
+  childId       String
+  child         Child        @relation(fields: [childId], references: [id])
+  achievementId String
+  achievement   Achievement  @relation(fields: [achievementId], references: [id])
+  earnedAt      DateTime     @default(now())
+
+  @@unique([childId, achievementId])
+}
+
+model SkillCard {
+  id          String      @id @default(cuid())
+  name        String
+  description String
+  rarity      CardRarity
+  phase       Int
+  skill       String
+  artworkUrl  String
+  isHolo      Boolean     @default(false)
+  children    ChildSkillCard[]
+}
+
+model ChildSkillCard {
+  id          String   @id @default(cuid())
+  childId     String
+  child       Child    @relation(fields: [childId], references: [id])
+  skillCardId String
+  skillCard   SkillCard @relation(fields: [skillCardId], references: [id])
+  earnedAt    DateTime @default(now())
+
+  @@unique([childId, skillCardId])
+}
+
+model Guild {
+  id        String  @id @default(cuid())
+  name      String  @unique
+  emblem    String
+  xpTotal   Int     @default(0)
+  members   Child[]
+  createdAt DateTime @default(now())
+}
+
+// ── PROJECTS ──────────────────────────────────────────
+
+model Project {
+  id          String       @id @default(cuid())
+  childId     String
+  child       Child        @relation(fields: [childId], references: [id])
+  title       String
+  description String?
+  phase       Int
+  language    CodeLanguage
+  code        Json
+  isPublished Boolean      @default(false)
+  gallerySlug String?      @unique
+  upvotes     Int          @default(0)
+  embedUrl    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+// ── SUBSCRIPTIONS ─────────────────────────────────────
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id])
+  stripeCustomerId     String             @unique
+  stripeSubscriptionId String?            @unique
+  plan                 SubscriptionPlan   @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+}
+
+// ── NEXTAUTH MODELS ───────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ── ENUMS ─────────────────────────────────────────────
+
+enum UserRole { PARENT EDUCATOR ADMIN }
+enum LessonType { VIDEO CODING QUIZ CHALLENGE PROJECT STORY }
+enum ProgressStatus { NOT_STARTED IN_PROGRESS COMPLETED MASTERED }
+enum XPEventType { LESSON_COMPLETE STREAK_BONUS CHALLENGE_WIN BADGE_EARN DAILY_QUEST }
+enum AchievementRarity { COMMON RARE EPIC LEGENDARY }
+enum CardRarity { COMMON UNCOMMON RARE HOLO LEGENDARY }
+enum CodeLanguage { SCRATCH PYTHON JAVASCRIPT HTML_CSS REACT SQL }
+enum SubscriptionPlan { FREE EXPLORER ADVENTURER CHAMPION FAMILY }
+enum SubscriptionStatus { ACTIVE PAST_DUE CANCELLED TRIALING }
