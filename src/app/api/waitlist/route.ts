@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getResend } from "@/lib/resend";
 import { WaitlistWelcome } from "@/emails/WaitlistWelcome";
 import { waitlistSchema } from "@/lib/validations/waitlist";
+import { render } from "@react-email/render";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,11 +25,13 @@ export async function POST(req: NextRequest) {
 
     const fromAddress = process.env.RESEND_FROM ?? "CodeQuest <hello@codequest.world>";
 
+    const html = render(WaitlistWelcome({ email }));
+
     await resend.emails.send({
       from: fromAddress,
       to: email,
       subject: "Your CodeQuest adventure is about to begin 🚀",
-      react: WaitlistWelcome({ email }),
+      html,
     });
 
     return NextResponse.json({ success: true });
