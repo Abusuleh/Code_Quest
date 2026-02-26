@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ZodError } from "zod";
 import { prisma } from "@/lib/prisma";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 import { WaitlistWelcome } from "@/emails/WaitlistWelcome";
 import { waitlistSchema } from "@/lib/validations/waitlist";
 
@@ -16,6 +16,11 @@ export async function POST(req: NextRequest) {
     }
 
     await prisma.waitlist.create({ data: { email } });
+
+    const resend = getResend();
+    if (!resend) {
+      return NextResponse.json({ success: false, error: "Email not configured" }, { status: 500 });
+    }
 
     await resend.emails.send({
       from: "CodeQuest <hello@codequest.world>",
