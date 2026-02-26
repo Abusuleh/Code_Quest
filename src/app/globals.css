@@ -13,11 +13,21 @@ body {
   height: 100%;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--cq-bg-base);
   color: var(--cq-text-primary);
   font-family: var(--font-body);
   margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 img,

@@ -1,0 +1,16 @@
+.cta {
+  position: relative;
+  overflow: hidden;
+}
+
+.cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(600px 400px at 10% 20%, rgba(0, 212, 255, 0.15), transparent 60%),
+    radial-gradient(500px 400px at 90% 40%, rgba(108, 63, 232, 0.2), transparent 65%),
+    radial-gradient(500px 400px at 50% 80%, rgba(245, 166, 35, 0.12), transparent 70%);
+  opacity: 0.9;
+  pointer-events: none;
+}

@@ -214,6 +214,15 @@ model Subscription {
   cancelAtPeriodEnd    Boolean            @default(false)
 }
 
+model Waitlist {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  source    String   @default("landing")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 // ── NEXTAUTH MODELS ───────────────────────────────────
 
 model Account {
