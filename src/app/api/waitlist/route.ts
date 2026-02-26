@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     const fromAddress = process.env.RESEND_FROM ?? "CodeQuest <hello@codequest.world>";
 
-    const html = render(WaitlistWelcome({ email }));
+    const html = await render(WaitlistWelcome({ email }));
 
     await resend.emails.send({
       from: fromAddress,
