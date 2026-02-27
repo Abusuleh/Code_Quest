@@ -125,15 +125,6 @@ export function HeroSection() {
 
       <div className="relative z-10 mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-6 py-24 lg:grid-cols-[1.1fr_0.9fr]">
         <div>
-          <motion.p
-            className="mb-4 text-xs uppercase tracking-[0.3em] text-cq-text-secondary"
-            initial={!reduced ? "hidden" : "show"}
-            animate="show"
-            variants={variants}
-            custom={0}
-          >
-            CodeQuest Launchpad
-          </motion.p>
           <motion.h1
             className="font-display text-4xl sm:text-5xl lg:text-6xl"
             initial={!reduced ? "hidden" : "show"}
