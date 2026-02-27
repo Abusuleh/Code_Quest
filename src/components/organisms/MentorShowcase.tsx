@@ -23,7 +23,7 @@ const mentors = [
     accent: "red",
     phase: "The Forge",
     description:
-      "Efficient, direct, competitive. Forge trains you like a craftsperson — precision, speed, and real-world standards.",
+      "Efficient, direct, competitive. Forge trains you like a craftsperson - precision, speed, and real-world standards.",
   },
   {
     name: "Zenith",
@@ -81,7 +81,7 @@ export function MentorShowcase() {
                 href="#waitlist"
                 className="mt-4 inline-flex items-center gap-2 text-sm text-cq-text-primary opacity-0 transition group-hover:opacity-100"
               >
-                Meet {mentor.name} →
+                Meet {mentor.name} -&gt;
               </a>
             </motion.div>
           );

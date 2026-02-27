@@ -53,7 +53,9 @@ export function RewardsPreview() {
               <p className="mt-2 font-display text-3xl">Level {level}</p>
               <p className="text-sm text-cq-text-secondary">Apprentice</p>
             </div>
-            <div className="text-2xl">🏅</div>
+            <div className="rounded-full border border-cq-border px-3 py-2 text-xs uppercase tracking-[0.2em] text-cq-text-secondary">
+              Badge
+            </div>
           </div>
 
           <div className="mt-6">
@@ -69,7 +71,7 @@ export function RewardsPreview() {
           <div className="mt-6 flex items-center justify-between rounded-xl border border-cq-border bg-cq-bg-elevated p-4">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">Streak</p>
-              <p className="mt-2 text-xl">🔥 {streak} Day Streak</p>
+              <p className="mt-2 text-xl">{streak} Day Streak</p>
             </div>
             <span className="text-cq-gold">+200 XP</span>
           </div>
@@ -77,7 +79,7 @@ export function RewardsPreview() {
           <div className="mt-6 grid grid-cols-3 gap-3 text-center text-xs">
             {["Loop Legend", "First Deploy", "Guild Champion"].map((badge) => (
               <div key={badge} className="rounded-lg border border-cq-border bg-cq-bg-elevated p-3">
-                <div className="text-lg">⭐</div>
+                <div className="text-lg">*</div>
                 <p className="mt-2 text-cq-text-secondary">{badge}</p>
               </div>
             ))}
@@ -95,17 +97,17 @@ export function RewardsPreview() {
             {
               title: "XP & Levels",
               text: "Earn XP for every lesson and level up through 50 ranks from Cadet to Grand Developer.",
-              icon: "⚡",
+              icon: "XP",
             },
             {
               title: "Streak System",
               text: "Code every day, maintain your streak, unlock legendary rewards.",
-              icon: "🔥",
+              icon: "STK",
             },
             {
               title: "Skill Cards",
               text: "Collect 200+ cards that prove your mastery across the kingdoms.",
-              icon: "🪪",
+              icon: "CARD",
             },
           ].map((item) => (
             <div
@@ -113,7 +115,9 @@ export function RewardsPreview() {
               className="rounded-2xl border border-cq-border bg-cq-bg-panel p-6"
             >
               <div className="flex items-center gap-4">
-                <div className="text-2xl">{item.icon}</div>
+                <div className="rounded-full border border-cq-border px-3 py-2 text-xs uppercase tracking-[0.2em] text-cq-text-secondary">
+                  {item.icon}
+                </div>
                 <h3 className="font-heading text-xl">{item.title}</h3>
               </div>
               <p className="mt-3 text-sm text-cq-text-secondary">{item.text}</p>

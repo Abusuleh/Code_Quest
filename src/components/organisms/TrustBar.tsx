@@ -3,7 +3,7 @@
 import styles from "@/components/organisms/TrustBar.module.css";
 
 const items = [
-  "Designed for ages 6–14",
+  "Designed for ages 6-14",
   "UK Curriculum Aligned",
   "COPPA & UK GDPR Compliant",
   "Child Safety First",
@@ -22,7 +22,7 @@ export function TrustBar() {
               className="flex items-center gap-4 text-xs uppercase tracking-[0.3em] text-cq-text-secondary"
             >
               <span>{item}</span>
-              <span className="text-cq-primary">◆</span>
+              <span className="text-cq-primary">*</span>
             </div>
           ))}
         </div>

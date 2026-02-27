@@ -1,6 +1,6 @@
 # CodeQuest
 
-CodeQuest is a narrative-driven coding education platform for children ages 6–14. This repository is the source of truth for the product build, following the Master Project Mandate.
+CodeQuest is a narrative-driven coding education platform for children ages 6-14. This repository is the source of truth for the product build, following the Master Project Mandate.
 
 ## Milestone Status
 

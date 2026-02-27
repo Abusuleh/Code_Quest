@@ -6,6 +6,7 @@ import styles from "@/components/organisms/NavBar.module.css";
 
 const links = [
   { label: "How It Works", href: "#how-it-works" },
+  { label: "Quest Preview", href: "#quest-preview" },
   { label: "The World", href: "#world-map" },
   { label: "Mentors", href: "#mentors" },
 ];
@@ -86,7 +87,7 @@ export function NavBar() {
         <div className="flex items-center justify-between">
           <span className="font-display text-lg text-cq-text-primary">Menu</span>
           <button type="button" aria-label="Close menu" onClick={() => setOpen(false)}>
-            ✕
+            X
           </button>
         </div>
         <nav className="mt-10 flex flex-col gap-6">

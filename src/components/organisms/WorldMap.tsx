@@ -6,28 +6,28 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 const kingdoms = [
   {
     name: "Spark Zone",
-    age: "Ages 6–8",
+    age: "Ages 6-8",
     accent: "cyan",
     phase: "01",
     tags: ["Block Coding", "Sequences", "First Games"],
   },
   {
     name: "Builder's Guild",
-    age: "Ages 8–10",
+    age: "Ages 8-10",
     accent: "green",
     phase: "02",
     tags: ["Python", "Functions", "Real Apps"],
   },
   {
     name: "The Forge",
-    age: "Ages 10–12",
+    age: "Ages 10-12",
     accent: "red",
     phase: "03",
     tags: ["JavaScript", "Web Dev", "Algorithms"],
   },
   {
     name: "Developer's Realm",
-    age: "Ages 12–14",
+    age: "Ages 12-14",
     accent: "violet",
     phase: "04",
     tags: ["React", "APIs", "AI/ML"],

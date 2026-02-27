@@ -7,17 +7,17 @@ const steps = [
   {
     title: "Take the Placement Quest",
     description: "A 15-minute gamified assessment to place your child perfectly.",
-    icon: "🧭",
+    icon: "01",
   },
   {
     title: "Enter Your Kingdom",
     description: "Start in the right phase for age and ability. No wasted time.",
-    icon: "🚪",
+    icon: "02",
   },
   {
     title: "Build, Level Up, Ship",
     description: "Complete lessons, earn XP, and publish real projects.",
-    icon: "🚀",
+    icon: "03",
   },
 ];
 
@@ -66,7 +66,7 @@ export function HowItWorks() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.15 }}
             >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-cq-border text-xl">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-cq-border text-xs tracking-[0.2em] text-cq-text-secondary">
                 {step.icon}
               </div>
               <h3 className="font-heading text-xl">{step.title}</h3>
