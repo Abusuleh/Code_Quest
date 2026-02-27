@@ -268,12 +268,71 @@ model VerificationToken {
 }
 
 // -- ENUMS ---------------------------------------------
-enum UserRole { PARENT EDUCATOR ADMIN }
-enum LessonType { VIDEO CODING QUIZ CHALLENGE PROJECT STORY }
-enum ProgressStatus { NOT_STARTED IN_PROGRESS COMPLETED MASTERED }
-enum XPEventType { LESSON_COMPLETE STREAK_BONUS CHALLENGE_WIN BADGE_EARN DAILY_QUEST }
-enum AchievementRarity { COMMON RARE EPIC LEGENDARY }
-enum CardRarity { COMMON UNCOMMON RARE HOLO LEGENDARY }
-enum CodeLanguage { SCRATCH PYTHON JAVASCRIPT HTML_CSS REACT SQL }
-enum SubscriptionPlan { FREE EXPLORER ADVENTURER CHAMPION FAMILY }
-enum SubscriptionStatus { ACTIVE PAST_DUE CANCELLED TRIALING }
+enum UserRole {
+  PARENT
+  EDUCATOR
+  ADMIN
+}
+
+enum LessonType {
+  VIDEO
+  CODING
+  QUIZ
+  CHALLENGE
+  PROJECT
+  STORY
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  MASTERED
+}
+
+enum XPEventType {
+  LESSON_COMPLETE
+  STREAK_BONUS
+  CHALLENGE_WIN
+  BADGE_EARN
+  DAILY_QUEST
+}
+
+enum AchievementRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum CardRarity {
+  COMMON
+  UNCOMMON
+  RARE
+  HOLO
+  LEGENDARY
+}
+
+enum CodeLanguage {
+  SCRATCH
+  PYTHON
+  JAVASCRIPT
+  HTML_CSS
+  REACT
+  SQL
+}
+
+enum SubscriptionPlan {
+  FREE
+  EXPLORER
+  ADVENTURER
+  CHAMPION
+  FAMILY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  TRIALING
+}
