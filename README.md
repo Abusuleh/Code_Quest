@@ -36,7 +36,8 @@ npm run dev
 
 ## Environment Variables
 
-Copy `.env.example` to `.env.local` and fill in values.
+Copy `.env.example` to `.env.local` and fill in values. Optional analytics/monitoring vars:
+`NEXT_PUBLIC_POSTHOG_KEY`, `SENTRY_DSN`.
 
 ## Project Structure
 
