@@ -13,7 +13,12 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 
-  if (isParentRoute && token?.role !== "USER") {
+  if (
+    isParentRoute &&
+    token?.role !== "PARENT" &&
+    token?.role !== "EDUCATOR" &&
+    token?.role !== "ADMIN"
+  ) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
   }
 

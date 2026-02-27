@@ -145,9 +145,18 @@ export function HeroSection() {
             variants={variants}
             custom={0.4}
           >
-            An immersive, story-driven coding world for ages 6–14. Four kingdoms. Four mentors. One
+            An immersive, story-driven coding world for ages 6-14. Four kingdoms. Four mentors. One
             extraordinary journey.
           </motion.p>
+          <motion.div
+            className="mt-5 inline-flex items-center gap-2 rounded-full border border-cq-border px-4 py-2 text-xs uppercase tracking-[0.2em] text-cq-text-secondary"
+            initial={!reduced ? "hidden" : "show"}
+            animate="show"
+            variants={variants}
+            custom={0.5}
+          >
+            Phase 1 - Coming Q3 2026
+          </motion.div>
           <motion.div
             className="mt-8 flex flex-col gap-4 sm:flex-row"
             initial={!reduced ? "hidden" : "show"}
@@ -156,7 +165,7 @@ export function HeroSection() {
             custom={0.6}
           >
             <Button size="lg" type="button" onClick={() => scrollTo("#waitlist")}>
-              Start the Quest →
+              Start the Quest
             </Button>
             <Button
               variant="outline"

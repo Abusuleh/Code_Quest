@@ -1,4 +1,4 @@
-// schema.prisma — CodeQuest Platform
+// schema.prisma - CodeQuest Platform
 // Database: PostgreSQL (Neon Serverless)
 
 generator client {
@@ -11,74 +11,59 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ── ACCOUNTS ──────────────────────────────────────────
-
+// -- ACCOUNTS ------------------------------------------
 model User {
   id            String    @id @default(cuid())
   email         String    @unique
-  emailVerified DateTime?
   name          String?
+  role          UserRole  @default(PARENT)
+  emailVerified DateTime?
   image         String?
-  passwordHash  String?
-  role          UserRole  @default(USER)
+  passwordHash  String?   // Added for credentials auth (Mandate addition)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  children      Child[]
+  subscription  Subscription?
   accounts      Account[]
   sessions      Session[]
-  children      Child[]
   verifyTokens  VerificationToken[]
-  subscription  Subscription?
 
   @@index([email])
 }
 
 model Child {
-  id             String    @id @default(cuid())
-  parentId       String
-  displayName    String
-  dateOfBirth    DateTime
-  avatarId       String    @default("avatar_01")
-  pinHash        String
-  currentPhase   PhaseSlug @default(SPARK_ZONE)
-  xp             Int       @default(0)
-  level          Int       @default(1)
-  streakDays     Int       @default(0)
-  lastActiveAt   DateTime?
-  consentGivenAt DateTime  @default(now())
-  pinAttempts    Int       @default(0)
-  pinLockedUntil DateTime?
-  guildId        String?
-
-  parent          User      @relation(fields: [parentId], references: [id], onDelete: Cascade)
-  guild           Guild?    @relation(fields: [guildId], references: [id])
-  progress        Progress[]
-  achievements    ChildAchievement[]
-  projects        Project[]
-  skillCards      ChildSkillCard[]
-  placementResult PlacementResult?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  parentId      String
+  parent        User      @relation(fields: [parentId], references: [id])
+  username      String    @unique
+  displayName   String
+  dateOfBirth   DateTime
+  avatarConfig  Json
+  currentPhase  Int       @default(1)
+  currentModule String?
+  xpTotal       Int       @default(0)
+  xpLevel       Int       @default(1)
+  streakCurrent Int       @default(0)
+  streakLongest Int       @default(0)
+  streakLastAt  DateTime?
+  gems          Int       @default(0)
+  guildId       String?
+  guild         Guild?    @relation(fields: [guildId], references: [id])
+  progress      Progress[]
+  achievements  ChildAchievement[]
+  projects      Project[]
+  skillCards    ChildSkillCard[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([parentId])
 }
 
-model PlacementResult {
-  id               String    @id @default(cuid())
-  childId          String    @unique
-  recommendedPhase PhaseSlug
-  score            Int
-  answers          Json
-  completedAt      DateTime  @default(now())
-
-  child            Child     @relation(fields: [childId], references: [id], onDelete: Cascade)
-}
-
-// ── CURRICULUM ────────────────────────────────────────
-
+// -- CURRICULUM ----------------------------------------
 model Phase {
-  id      String   @id
-  number  Int      @unique
+  id      String  @id
+  number  Int     @unique
   title   String
   kingdom String
   mentor  String
@@ -114,8 +99,7 @@ model Lesson {
   progress     Progress[]
 }
 
-// ── PROGRESS & XP ─────────────────────────────────────
-
+// -- PROGRESS & XP -------------------------------------
 model Progress {
   id          String         @id @default(cuid())
   childId     String
@@ -144,8 +128,7 @@ model XPEvent {
   @@index([childId, createdAt])
 }
 
-// ── ACHIEVEMENTS & GAMIFICATION ───────────────────────
-
+// -- ACHIEVEMENTS & GAMIFICATION -----------------------
 model Achievement {
   id          String             @id @default(cuid())
   key         String             @unique
@@ -182,27 +165,26 @@ model SkillCard {
 }
 
 model ChildSkillCard {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   childId     String
-  child       Child    @relation(fields: [childId], references: [id])
+  child       Child     @relation(fields: [childId], references: [id])
   skillCardId String
   skillCard   SkillCard @relation(fields: [skillCardId], references: [id])
-  earnedAt    DateTime @default(now())
+  earnedAt    DateTime  @default(now())
 
   @@unique([childId, skillCardId])
 }
 
 model Guild {
-  id        String  @id @default(cuid())
-  name      String  @unique
+  id        String   @id @default(cuid())
+  name      String   @unique
   emblem    String
-  xpTotal   Int     @default(0)
+  xpTotal   Int      @default(0)
   members   Child[]
   createdAt DateTime @default(now())
 }
 
-// ── PROJECTS ──────────────────────────────────────────
-
+// -- PROJECTS ------------------------------------------
 model Project {
   id          String       @id @default(cuid())
   childId     String
@@ -220,8 +202,7 @@ model Project {
   updatedAt   DateTime     @updatedAt
 }
 
-// ── SUBSCRIPTIONS ─────────────────────────────────────
-
+// -- SUBSCRIPTIONS -------------------------------------
 model Subscription {
   id                   String             @id @default(cuid())
   userId               String             @unique
@@ -234,6 +215,7 @@ model Subscription {
   cancelAtPeriodEnd    Boolean            @default(false)
 }
 
+// -- WAITLIST (Mandate addition) -----------------------
 model Waitlist {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -243,8 +225,7 @@ model Waitlist {
   @@index([createdAt])
 }
 
-// ── NEXTAUTH MODELS ───────────────────────────────────
-
+// -- NEXTAUTH MODELS (Mandate addition) ----------------
 model Account {
   id                String  @id @default(cuid())
   userId            String
@@ -286,80 +267,13 @@ model VerificationToken {
   @@index([userId])
 }
 
-// ── ENUMS ─────────────────────────────────────────────
-
-enum UserRole {
-  USER
-  CHILD
-  ADMIN
-}
-
-enum PhaseSlug {
-  SPARK_ZONE
-  BUILDERS_GUILD
-  THE_FORGE
-  DEVELOPERS_REALM
-}
-
-enum LessonType {
-  VIDEO
-  CODING
-  QUIZ
-  CHALLENGE
-  PROJECT
-  STORY
-}
-
-enum ProgressStatus {
-  NOT_STARTED
-  IN_PROGRESS
-  COMPLETED
-  MASTERED
-}
-
-enum XPEventType {
-  LESSON_COMPLETE
-  STREAK_BONUS
-  CHALLENGE_WIN
-  BADGE_EARN
-  DAILY_QUEST
-}
-
-enum AchievementRarity {
-  COMMON
-  RARE
-  EPIC
-  LEGENDARY
-}
-
-enum CardRarity {
-  COMMON
-  UNCOMMON
-  RARE
-  HOLO
-  LEGENDARY
-}
-
-enum CodeLanguage {
-  SCRATCH
-  PYTHON
-  JAVASCRIPT
-  HTML_CSS
-  REACT
-  SQL
-}
-
-enum SubscriptionPlan {
-  FREE
-  EXPLORER
-  ADVENTURER
-  CHAMPION
-  FAMILY
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  PAST_DUE
-  CANCELLED
-  TRIALING
-}
+// -- ENUMS ---------------------------------------------
+enum UserRole { PARENT EDUCATOR ADMIN }
+enum LessonType { VIDEO CODING QUIZ CHALLENGE PROJECT STORY }
+enum ProgressStatus { NOT_STARTED IN_PROGRESS COMPLETED MASTERED }
+enum XPEventType { LESSON_COMPLETE STREAK_BONUS CHALLENGE_WIN BADGE_EARN DAILY_QUEST }
+enum AchievementRarity { COMMON RARE EPIC LEGENDARY }
+enum CardRarity { COMMON UNCOMMON RARE HOLO LEGENDARY }
+enum CodeLanguage { SCRATCH PYTHON JAVASCRIPT HTML_CSS REACT SQL }
+enum SubscriptionPlan { FREE EXPLORER ADVENTURER CHAMPION FAMILY }
+enum SubscriptionStatus { ACTIVE PAST_DUE CANCELLED TRIALING }
