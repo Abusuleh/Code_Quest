@@ -9,6 +9,7 @@ const links = [
   { label: "Quest Preview", href: "#quest-preview" },
   { label: "The World", href: "#world-map" },
   { label: "Mentors", href: "#mentors" },
+  { label: "Our Story", href: "/about" },
 ];
 
 export function NavBar() {
