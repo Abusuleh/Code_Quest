@@ -14,11 +14,13 @@
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
     "seed": "ts-node prisma/seed/achievements.ts && ts-node prisma/seed/skill-cards.ts",
+    "seed:curriculum": "ts-node prisma/seed/curriculum.ts",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "prepare": "node -e \"if(!process.env.CI){require('child_process').execSync('husky install',{stdio:'inherit'})}\""
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.78.0",
     "@auth/prisma-adapter": "^2.11.1",
     "@prisma/client": "^5.22.0",
     "@react-email/render": "^2.0.4",
@@ -26,6 +28,7 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/speed-insights": "^1.3.1",
     "bcryptjs": "^3.0.3",
+    "blockly": "^12.4.1",
     "framer-motion": "^12.34.3",
     "jsonwebtoken": "^9.0.3",
     "lru-cache": "^11.2.6",
