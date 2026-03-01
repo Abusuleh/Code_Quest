@@ -311,6 +311,9 @@ enum XPEventType {
   CHALLENGE_WIN
   BADGE_EARN
   DAILY_QUEST
+  FIRST_LESSON
+  PERFECT_SCORE
+  PROJECT_PUBLISH
 }
 
 enum AchievementRarity {
