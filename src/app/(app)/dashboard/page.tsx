@@ -102,9 +102,26 @@ export default async function ChildDashboardPage() {
     }),
   ]);
 
+  const nextLesson = await prisma.lesson.findFirst({
+    where: {
+      module: { phase: { number: child.currentPhase } },
+      NOT: {
+        progress: {
+          some: {
+            childId: session.activeChildId,
+            status: { in: ["COMPLETED", "MASTERED"] },
+          },
+        },
+      },
+    },
+    orderBy: [{ module: { order: "asc" } }, { order: "asc" }],
+    select: { id: true },
+  });
+
   const hasPlacement = Boolean(placement);
   const contentSeeded = achievementCount > 0 && skillCardCount > 0;
   const hasLessons = lessonCount > 0;
+  const continueHref = nextLesson ? `/learn/${nextLesson.id}` : "/quest/1";
 
   const fallback = kingdomFallback[child.currentPhase] ?? kingdomFallback[1];
   const kingdomName = phase?.kingdom ?? fallback.kingdom;
@@ -211,7 +228,7 @@ export default async function ChildDashboardPage() {
               </Link>
             ) : contentSeeded && hasLessons ? (
               <Link
-                href="/dashboard"
+                href={continueHref}
                 className="inline-flex items-center justify-center rounded-full border border-cq-border px-6 py-2 text-sm text-white"
               >
                 Continue Quest &rarr;
