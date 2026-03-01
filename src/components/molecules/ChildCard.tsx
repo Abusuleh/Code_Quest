@@ -43,16 +43,12 @@ export function ChildCard({
         </div>
       </div>
       <div className="mt-4">
-        <XPBar
-          currentXP={xpTotal}
-          nextLevelXP={2000}
-          level={Math.max(1, Math.ceil(xpTotal / 500))}
-        />
+        <XPBar xpTotal={xpTotal} />
       </div>
       <div className="mt-4 flex items-center justify-between text-xs text-cq-text-secondary">
         <span>{lastActive ? `Last active ${lastActive}` : "Ready for launch"}</span>
         <span className="text-cq-cyan opacity-0 transition group-hover:opacity-100">
-          Play Now →
+          Play Now &rarr;
         </span>
       </div>
     </button>
