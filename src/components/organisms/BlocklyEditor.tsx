@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import * as Blockly from "blockly";
 import { javascriptGenerator, Order } from "blockly/javascript";
 
@@ -313,9 +306,7 @@ export const BlocklyEditor = forwardRef<BlocklyEditorHandle, Props>(
           ? Blockly.Xml.domToText(Blockly.Xml.workspaceToDom(workspaceRef.current))
           : workspaceXml,
       getGeneratedCode: () =>
-        workspaceRef.current
-          ? javascriptGenerator.workspaceToCode(workspaceRef.current)
-          : "",
+        workspaceRef.current ? javascriptGenerator.workspaceToCode(workspaceRef.current) : "",
       clearWorkspace: () => {
         if (workspaceRef.current) {
           workspaceRef.current.clear();

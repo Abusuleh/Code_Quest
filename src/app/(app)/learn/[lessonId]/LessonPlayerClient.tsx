@@ -402,7 +402,11 @@ function MobileSidebar({
       >
         <div className="flex items-center justify-between border-b border-cq-border px-4 py-4">
           <span className="font-heading text-white">Lesson</span>
-          <button type="button" className="text-sm text-cq-text-secondary" onClick={() => setOpen(false)}>
+          <button
+            type="button"
+            className="text-sm text-cq-text-secondary"
+            onClick={() => setOpen(false)}
+          >
             Close
           </button>
         </div>
@@ -424,6 +428,3 @@ function MobileSidebar({
     </>
   );
 }
-
-
-

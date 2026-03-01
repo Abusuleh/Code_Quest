@@ -11,11 +11,7 @@ type LessonContent = {
   starterXml?: string;
 };
 
-export default async function LessonPlayerPage({
-  params,
-}: {
-  params: { lessonId: string };
-}) {
+export default async function LessonPlayerPage({ params }: { params: { lessonId: string } }) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     redirect("/auth/login");

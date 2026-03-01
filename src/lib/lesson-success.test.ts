@@ -17,12 +17,12 @@ describe("checkSuccessCondition", () => {
 
   it("returns true only when ALL conditions are satisfied", () => {
     const xml = xmlWithBlocks(["control_repeat", "motion_movesteps"]);
-    expect(
-      checkSuccessCondition(xml, "hasBlock:control_repeat|hasBlock:motion_movesteps"),
-    ).toBe(true);
-    expect(
-      checkSuccessCondition(xml, "hasBlock:control_repeat|hasBlock:motion_turnright"),
-    ).toBe(false);
+    expect(checkSuccessCondition(xml, "hasBlock:control_repeat|hasBlock:motion_movesteps")).toBe(
+      true,
+    );
+    expect(checkSuccessCondition(xml, "hasBlock:control_repeat|hasBlock:motion_turnright")).toBe(
+      false,
+    );
   });
 
   it("returns true for empty condition string — no requirement", () => {

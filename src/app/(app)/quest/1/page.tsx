@@ -173,7 +173,9 @@ export default async function QuestPage() {
                 Module {index + 2}
               </p>
               <h2 className="mt-2 text-xl font-heading text-white">Locked Kingdom</h2>
-              <p className="mt-2 text-sm text-cq-text-secondary">Unlocks after Module {index + 1}.</p>
+              <p className="mt-2 text-sm text-cq-text-secondary">
+                Unlocks after Module {index + 1}.
+              </p>
             </section>
           ))}
         </div>

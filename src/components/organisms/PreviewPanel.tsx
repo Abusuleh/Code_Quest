@@ -37,9 +37,7 @@ export function PreviewPanel({
   onNextLesson,
   shareEnabled,
 }: Props) {
-  const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(
-    null,
-  );
+  const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [consoleLogs, setConsoleLogs] = useState<ConsoleEntry[]>([]);
   const [srcDoc, setSrcDoc] = useState("");
   const runIdRef = useRef(0);
@@ -52,10 +50,11 @@ export function PreviewPanel({
     const handler = (event: MessageEvent) => {
       if (event.data?.lessonId !== lessonId) return;
       if (event.data?.type === "console") {
-        setConsoleLogs((prev) => [
-          ...prev,
-          { id: `${Date.now()}-${Math.random()}`, message: event.data.message },
-        ].slice(-10));
+        setConsoleLogs((prev) =>
+          [...prev, { id: `${Date.now()}-${Math.random()}`, message: event.data.message }].slice(
+            -10,
+          ),
+        );
       }
       if (event.data?.type === "error") {
         setBanner({ type: "error", message: event.data.message });
@@ -164,7 +163,15 @@ export function PreviewPanel({
       setBanner({ type: "success", message: successBanner });
       onLessonComplete();
     }
-  }, [runSignal, lessonId, lessonXp, generatedCode, onLessonComplete, successCondition, workspaceXml]);
+  }, [
+    runSignal,
+    lessonId,
+    lessonXp,
+    generatedCode,
+    onLessonComplete,
+    successCondition,
+    workspaceXml,
+  ]);
 
   const bannerClasses = useMemo(() => {
     if (!banner) return "";

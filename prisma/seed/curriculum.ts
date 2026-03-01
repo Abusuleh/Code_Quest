@@ -142,7 +142,8 @@ const lessons = [
     estimatedMin: 25,
     content: {
       type: "project",
-      objective: "Create a free-form drawing program using sequences, loops, events, and at least 3 colours",
+      objective:
+        "Create a free-form drawing program using sequences, loops, events, and at least 3 colours",
       hint: "There is no wrong answer here! Start by drawing your favourite shape, then add colours, then add keyboard control. Make Byte proud!",
       successCondition:
         "hasBlock:control_repeat|hasBlock:pen_setPenColorToColor|hasBlock:event_whenkeypressed",

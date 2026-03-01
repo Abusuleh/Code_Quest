@@ -10,10 +10,7 @@
  * An empty condition string means no requirement — returns true.
  * An empty XML string fails any hasBlock requirement.
  */
-export function checkSuccessCondition(
-  workspaceXml: string,
-  condition: string,
-): boolean {
+export function checkSuccessCondition(workspaceXml: string, condition: string): boolean {
   if (!condition || condition.trim() === "") return true;
 
   const checks = condition.split("|");

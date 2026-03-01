@@ -6,10 +6,7 @@ import { prisma } from "@/lib/prisma";
 
 type LessonProgressStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "MASTERED";
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { n: string } },
-) {
+export async function GET(_request: NextRequest, { params }: { params: { n: string } }) {
   const phaseNumber = Number(params.n);
   if (!phaseNumber || Number.isNaN(phaseNumber)) {
     return NextResponse.json({ error: "INVALID_PHASE" }, { status: 400 });
