@@ -20,4 +20,5 @@ export const childCreateSchema = z.object({
   displayName: z.string().min(2),
   dateOfBirth: z.string(),
   avatarConfig: z.record(z.string(), z.unknown()),
+  pin: z.string().regex(/^\d{4}$/, "PIN must be 4 digits"),
 });

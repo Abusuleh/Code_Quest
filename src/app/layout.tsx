@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import { PostHogGate } from "@/components/analytics/PostHogGate";
 import { SpeedInsightsGate } from "@/components/analytics/SpeedInsightsGate";
+import { AuthProvider } from "@/components/providers/AuthProvider";
 import { DM_Sans, JetBrains_Mono, Orbitron, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 
@@ -45,11 +46,13 @@ export default function RootLayout({
       className={`${orbitron.variable} ${spaceGrotesk.variable} ${dmSans.variable} ${jetbrainsMono.variable} antialiased`}
     >
       <body>
-        <PostHogGate>
-          {children}
-          <Analytics />
-          <SpeedInsightsGate />
-        </PostHogGate>
+        <AuthProvider>
+          <PostHogGate>
+            {children}
+            <Analytics />
+            <SpeedInsightsGate />
+          </PostHogGate>
+        </AuthProvider>
       </body>
     </html>
   );

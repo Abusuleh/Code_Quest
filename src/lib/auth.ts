@@ -67,5 +67,14 @@ export const authOptions: NextAuthOptions = {
       session.activeChildId = token.activeChildId as string | undefined;
       return session;
     },
+    async signIn({ user, account }) {
+      if (account?.provider === "google" && user?.id) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+        });
+      }
+      return true;
+    },
   },
 };

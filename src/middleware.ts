@@ -8,9 +8,13 @@ export async function middleware(req: NextRequest) {
 
   const isParentRoute = pathname.startsWith("/parent");
   const isChildRoute = pathname.startsWith("/dashboard") || pathname.startsWith("/placement");
+  const isAuthRoute = pathname.startsWith("/auth/login") || pathname.startsWith("/auth/signup");
 
   if (!token && (isParentRoute || isChildRoute)) {
     return NextResponse.redirect(new URL("/auth/login", req.url));
+  }
+  if (token && isAuthRoute) {
+    return NextResponse.redirect(new URL("/parent/dashboard", req.url));
   }
 
   if (
@@ -33,5 +37,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/parent/:path*", "/dashboard/:path*", "/placement/:path*"],
+  matcher: ["/parent/:path*", "/dashboard/:path*", "/placement/:path*", "/auth/:path*"],
 };

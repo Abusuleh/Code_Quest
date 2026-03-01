@@ -47,10 +47,14 @@ model Child {
   streakCurrent Int       @default(0)
   streakLongest Int       @default(0)
   streakLastAt  DateTime?
+  pinHash       String?   // bcrypt hash, saltRounds=12, null until PIN is set
+  pinAttempts   Int       @default(0)
+  pinLockedUntil DateTime?
   gems          Int       @default(0)
   guildId       String?
   guild         Guild?    @relation(fields: [guildId], references: [id])
   progress      Progress[]
+  placementResults PlacementResult[]
   achievements  ChildAchievement[]
   projects      Project[]
   skillCards    ChildSkillCard[]
@@ -272,6 +276,17 @@ enum UserRole {
   PARENT
   EDUCATOR
   ADMIN
+}
+
+model PlacementResult {
+  id        String   @id @default(cuid())
+  childId   String
+  child     Child    @relation(fields: [childId], references: [id])
+  answers   Json
+  phase     Int
+  createdAt DateTime @default(now())
+
+  @@index([childId, createdAt])
 }
 
 enum LessonType {
