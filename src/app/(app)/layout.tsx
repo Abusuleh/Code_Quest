@@ -13,7 +13,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-cq-bg text-cq-text-primary">
       <div className="hidden w-64 lg:block">
-        <AppNav parentName={session.user.name} />
+        <AppNav parentName={session.user.name} role={session.user.role} />
       </div>
       <main className="flex-1">{children}</main>
     </div>

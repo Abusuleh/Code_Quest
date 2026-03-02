@@ -111,6 +111,15 @@ const achievements = [
     gemReward: 0,
     rarity: "COMMON",
   },
+  {
+    key: "SPARK_BADGE",
+    title: "Spark Zone Pioneer",
+    description: "Complete every lesson in Phase 1 and earn the Spark Badge.",
+    iconUrl: "/achievements/spark-badge.png",
+    xpReward: 200,
+    gemReward: 50,
+    rarity: "LEGENDARY",
+  },
 ];
 
 async function main() {

@@ -5,11 +5,22 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { awardXP } from "@/lib/xp-engine";
 import { checkSuccessCondition } from "@/lib/lesson-success";
+import { render } from "@react-email/render";
+import { getResend } from "@/lib/resend";
+import { SparkGraduationEmail } from "@/emails/SparkGraduationEmail";
 
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || !session.activeChildId) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
+  }
+
+  const child = await prisma.child.findUnique({
+    where: { id: session.activeChildId },
+    select: { activeSessionToken: true },
+  });
+  if (!child?.activeSessionToken || child.activeSessionToken !== session.activeChildSessionToken) {
+    return NextResponse.json({ reason: "SESSION_DISPLACED" }, { status: 409 });
   }
 
   const payload = await request.json().catch(() => null);
@@ -27,6 +38,11 @@ export async function POST(request: NextRequest) {
       xpReward: true,
       gemReward: true,
       content: true,
+      module: {
+        select: {
+          phase: { select: { number: true } },
+        },
+      },
     },
   });
 
@@ -106,16 +122,99 @@ export async function POST(request: NextRequest) {
     },
   });
 
+  const completedCount = await prisma.progress.count({
+    where: {
+      childId: session.activeChildId,
+      status: { in: ["COMPLETED", "MASTERED"] },
+      lesson: { module: { phase: { number: 1 } } },
+    },
+  });
+
+  let sparkGraduation = false;
+  let sparkAchievement: {
+    id: string;
+    title: string;
+    rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
+    xpReward: number;
+    gemReward: number;
+  } | null = null;
+
+  if (completedCount >= 45) {
+    sparkGraduation = true;
+    const spark = await prisma.achievement.findUnique({
+      where: { key: "SPARK_BADGE" },
+      select: { id: true, title: true, rarity: true, xpReward: true, gemReward: true },
+    });
+    if (spark) {
+      const existingSpark = await prisma.childAchievement.findUnique({
+        where: {
+          childId_achievementId: {
+            childId: session.activeChildId,
+            achievementId: spark.id,
+          },
+        },
+      });
+
+      if (!existingSpark) {
+        await prisma.childAchievement.create({
+          data: { childId: session.activeChildId, achievementId: spark.id },
+        });
+        await awardXP(session.activeChildId, "BADGE_EARN", {
+          achievementKey: "SPARK_BADGE",
+        });
+        await prisma.child.update({
+          where: { id: session.activeChildId },
+          data: { currentPhase: 2 },
+        });
+        sparkAchievement = spark;
+
+        const resend = getResend();
+        if (resend) {
+          const childProfile = await prisma.child.findUnique({
+            where: { id: session.activeChildId },
+            select: { displayName: true, xpTotal: true, parent: { select: { email: true } } },
+          });
+          if (childProfile?.parent.email) {
+            const baseUrl =
+              process.env.NEXT_PUBLIC_APP_URL ??
+              process.env.NEXTAUTH_URL ??
+              "http://localhost:3000";
+            const html = await render(
+              SparkGraduationEmail({
+                childName: childProfile.displayName,
+                xpTotal: childProfile.xpTotal,
+                dashboardUrl: `${baseUrl}/parent/dashboard`,
+              }),
+            );
+            await resend.emails.send({
+              from: process.env.RESEND_FROM ?? "Byte from CodeQuest <byte@codequest.world>",
+              to: childProfile.parent.email,
+              subject: `${childProfile.displayName} just completed the Spark Zone!`,
+              html,
+            });
+          }
+        }
+      }
+    }
+  }
+
   const finalResult = bonusResult ?? xpResult;
+  const updatedChild = await prisma.child.findUnique({
+    where: { id: session.activeChildId },
+    select: { xpTotal: true, xpLevel: true },
+  });
 
   return NextResponse.json({
     success: true,
     xpAwarded: xpResult.xpAwarded + (bonusResult?.xpAwarded ?? 0),
-    xpTotal: finalResult.xpTotal,
+    xpTotal: updatedChild?.xpTotal ?? finalResult.xpTotal,
     leveledUp: finalResult.leveledUp,
     newLevel: finalResult.newLevel,
     streakBonus: xpResult.streakBonus,
-    newAchievements: achievementRecords,
+    newAchievements: sparkAchievement
+      ? [...achievementRecords, sparkAchievement]
+      : achievementRecords,
     gems: lesson.gemReward,
+    sparkGraduation,
   });
 }

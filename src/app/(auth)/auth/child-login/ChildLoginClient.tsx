@@ -66,9 +66,20 @@ export function ChildLoginClient() {
       setPin("");
       return;
     }
+    const data = (await res.json().catch(() => null)) as { activeSessionToken?: string } | null;
     setStatus("success");
     setMessage("Welcome back.");
-    await update({ activeChildId: childId });
+    await update({ activeChildId: childId, activeChildSessionToken: data?.activeSessionToken });
+    if (data?.activeSessionToken) {
+      const fingerprint = await computeFingerprint();
+      if (fingerprint) {
+        await fetch(`/api/children/${childId}/device-log`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fingerprint }),
+        }).catch(() => null);
+      }
+    }
     router.push("/dashboard");
   }
 
@@ -124,4 +135,17 @@ export function ChildLoginClient() {
       </div>
     </main>
   );
+}
+
+async function computeFingerprint(): Promise<string | null> {
+  if (typeof window === "undefined" || !window.crypto?.subtle) return null;
+  const ua = navigator.userAgent;
+  const width = window.screen?.width ?? 0;
+  const height = window.screen?.height ?? 0;
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC";
+  const input = `${ua}|${width}|${height}|${tz}`;
+  const data = new TextEncoder().encode(input);
+  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }

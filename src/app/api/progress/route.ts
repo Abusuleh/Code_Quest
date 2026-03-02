@@ -10,6 +10,14 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
+  const child = await prisma.child.findUnique({
+    where: { id: session.activeChildId },
+    select: { activeSessionToken: true },
+  });
+  if (!child?.activeSessionToken || child.activeSessionToken !== session.activeChildSessionToken) {
+    return NextResponse.json({ reason: "SESSION_DISPLACED" }, { status: 409 });
+  }
+
   const payload = await request.json().catch(() => null);
   const lessonId = payload?.lessonId as string | undefined;
   const code = payload?.code as string | undefined;

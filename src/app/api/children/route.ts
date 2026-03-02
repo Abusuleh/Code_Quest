@@ -34,8 +34,18 @@ export async function POST(request: NextRequest) {
   const existingChildren = await prisma.child.count({
     where: { parentId: session.user.id },
   });
-  if (existingChildren >= 5) {
-    return NextResponse.json({ error: "MAX_CHILDREN" }, { status: 400 });
+
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+    select: { plan: true, childSeats: true },
+  });
+  const currentPlan = subscription?.plan ?? "FREE";
+  const allowedSeats = subscription?.childSeats ?? 1;
+  if (existingChildren >= allowedSeats) {
+    return NextResponse.json(
+      { reason: "SEAT_LIMIT_REACHED", currentPlan, upgradeUrl: "/pricing" },
+      { status: 403 },
+    );
   }
 
   try {

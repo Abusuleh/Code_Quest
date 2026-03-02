@@ -47,6 +47,9 @@ model Child {
   streakCurrent Int       @default(0)
   streakLongest Int       @default(0)
   streakLastAt  DateTime?
+  activeSessionToken String?
+  deviceFingerprints Json      @default("[]")
+  deviceFpUpdatedAt  DateTime?
   pinHash       String?   // bcrypt hash, saltRounds=12, null until PIN is set
   pinAttempts   Int       @default(0)
   pinLockedUntil DateTime?
@@ -103,6 +106,7 @@ model Lesson {
   starterCode  Json?
   solutionCode Json?
   progress     Progress[]
+  projects     Project[]
 }
 
 // -- PROGRESS & XP -------------------------------------
@@ -195,6 +199,8 @@ model Project {
   id          String       @id @default(cuid())
   childId     String
   child       Child        @relation(fields: [childId], references: [id])
+  lessonId    String?
+  lesson      Lesson?      @relation(fields: [lessonId], references: [id])
   title       String
   description String?
   phase       Int
@@ -204,6 +210,7 @@ model Project {
   gallerySlug String?      @unique
   upvotes     Int          @default(0)
   embedUrl    String?
+  publishedAt DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -219,6 +226,26 @@ model Subscription {
   status               SubscriptionStatus @default(ACTIVE)
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean            @default(false)
+  childSeats           Int                @default(1)
+  stripeNgn            Boolean            @default(false)
+}
+
+model DeviceLog {
+  id          String   @id @default(cuid())
+  childId     String
+  fingerprint String
+  seenAt      DateTime @default(now())
+
+  @@index([childId, seenAt])
+}
+
+model ProjectUpvote {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  @@unique([projectId, userId])
 }
 
 // -- WAITLIST (Mandate addition) -----------------------
@@ -344,6 +371,7 @@ enum CodeLanguage {
 
 enum SubscriptionPlan {
   FREE
+  SPARK
   EXPLORER
   ADVENTURER
   CHAMPION

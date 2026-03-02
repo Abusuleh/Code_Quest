@@ -10,6 +10,17 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     return NextResponse.json({ error: "UNAUTHORIZED" }, { status: 401 });
   }
 
+  const childSession = await prisma.child.findUnique({
+    where: { id: session.activeChildId },
+    select: { activeSessionToken: true },
+  });
+  if (
+    !childSession?.activeSessionToken ||
+    childSession.activeSessionToken !== session.activeChildSessionToken
+  ) {
+    return NextResponse.json({ reason: "SESSION_DISPLACED" }, { status: 409 });
+  }
+
   const lesson = await prisma.lesson.findUnique({
     where: { id: params.id },
     select: {

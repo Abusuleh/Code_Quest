@@ -2,7 +2,9 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canAccessLesson } from "@/lib/subscription-gate";
 import { LessonPlayerClient } from "./LessonPlayerClient";
+import { LessonLockedView } from "./LessonLockedView";
 
 type LessonContent = {
   objective?: string;
@@ -52,6 +54,21 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
 
   if (!lesson) {
     redirect("/quest/1");
+  }
+
+  const subscription = await prisma.subscription.findUnique({
+    where: { userId: session.user.id },
+  });
+  const canAccess = canAccessLesson(subscription, lesson.module.order);
+  if (!canAccess) {
+    return (
+      <LessonLockedView
+        lessonTitle={lesson.title}
+        moduleTitle={lesson.module.title}
+        objective={(lesson.content as LessonContent).objective ?? ""}
+        lessonId={lesson.id}
+      />
+    );
   }
 
   const moduleLessons = await prisma.lesson.findMany({
@@ -112,6 +129,7 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
       gems={child?.gems ?? 0}
       progressDots={progressDots}
       nextLessonId={nextLesson?.id ?? null}
+      childId={session.activeChildId}
     />
   );
 }
