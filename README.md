@@ -5,10 +5,11 @@ CodeQuest is a narrative-driven coding education platform for children ages 6-14
 ## Milestone Status
 
 - M1: Project Bootstrap (complete)
-- M2: Landing Page Live (in progress)
+- M2: Landing Page Live (complete — March 2, 2026)
 - M3: Auth + Placement + Child Accounts (complete — March 1, 2026)
 - M4: XP Engine + Gamification (complete — March 1, 2026)
 - M5: Lesson Player (complete — March 1, 2026)
+- M6: Phase 1 Complete + Stripe + Gallery + Graduation (complete — March 2, 2026)
 
 ## Tech Stack
 
