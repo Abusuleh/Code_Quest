@@ -58,6 +58,9 @@ export const authOptions: NextAuthOptions = {
       }
       if (trigger === "update" && session?.activeChildId) {
         token.activeChildId = session.activeChildId;
+        if (session.activeChildSessionToken) {
+          token.activeChildSessionToken = session.activeChildSessionToken;
+        }
       }
       return token;
     },
@@ -65,6 +68,7 @@ export const authOptions: NextAuthOptions = {
       session.user.id = token.userId as string;
       session.user.role = token.role as string;
       session.activeChildId = token.activeChildId as string | undefined;
+      session.activeChildSessionToken = token.activeChildSessionToken as string | undefined;
       return session;
     },
     async signIn({ user, account }) {

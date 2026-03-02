@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { checkSuccessCondition } from "@/lib/lesson-success";
 
 type LessonContent = {
@@ -9,6 +11,7 @@ type LessonContent = {
 
 type Props = {
   lessonId: string;
+  lessonType?: string;
   lessonXp: number;
   content: LessonContent;
   workspaceXml: string;
@@ -27,6 +30,7 @@ type ConsoleEntry = {
 
 export function PreviewPanel({
   lessonId,
+  lessonType,
   lessonXp,
   content,
   workspaceXml,
@@ -41,8 +45,13 @@ export function PreviewPanel({
   const [consoleLogs, setConsoleLogs] = useState<ConsoleEntry[]>([]);
   const [srcDoc, setSrcDoc] = useState("");
   const runIdRef = useRef(0);
+  const router = useRouter();
+  const [publishing, setPublishing] = useState(false);
+  const [publishSlug, setPublishSlug] = useState<string | null>(null);
+  const [celebrate, setCelebrate] = useState(false);
 
   const successCondition = content?.successCondition ?? "";
+  const isProject = lessonType === "PROJECT";
 
   const resetConsole = () => setConsoleLogs([]);
 
@@ -180,14 +189,71 @@ export function PreviewPanel({
       : "border-cq-red/60 bg-cq-bg-elevated text-cq-red";
   }, [banner]);
 
+  const handlePublish = async () => {
+    if (publishing || !isProject) return;
+    setPublishing(true);
+    try {
+      const res = await fetch("/api/gallery/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lessonId,
+          workspaceXml,
+          generatedCode,
+        }),
+      });
+      if (!res.ok) {
+        setPublishing(false);
+        return;
+      }
+      const data = (await res.json().catch(() => null)) as { slug?: string } | null;
+      if (data?.slug) {
+        setPublishSlug(data.slug);
+        setCelebrate(true);
+        setTimeout(() => {
+          router.push(`/gallery/${data.slug}`);
+        }, 1800);
+      }
+    } finally {
+      setPublishing(false);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!publishSlug) return;
+    const url = `${window.location.origin}/gallery/${publishSlug}`;
+    await navigator.clipboard.writeText(url);
+  };
+
   return (
     <aside className="flex h-full w-[380px] flex-col border-l border-cq-border bg-cq-bg-elevated">
+      {celebrate ? (
+        <div className="pointer-events-none absolute inset-0 z-10">
+          {Array.from({ length: 30 }).map((_, index) => (
+            <motion.span
+              // eslint-disable-next-line react/no-array-index-key
+              key={index}
+              className="absolute h-2 w-2 rounded-full bg-cq-cyan"
+              initial={{ opacity: 0, y: 0, x: 0, scale: 0 }}
+              animate={{
+                opacity: [0, 1, 0],
+                y: [0, -120 - Math.random() * 80],
+                x: [0, (Math.random() - 0.5) * 200],
+                scale: [0, 1, 0.6],
+              }}
+              transition={{ duration: 1.8, delay: Math.random() * 0.2 }}
+              style={{ left: "50%", top: "45%" }}
+            />
+          ))}
+        </div>
+      ) : null}
       <div className="flex items-center justify-between border-b border-cq-border px-5 py-4">
         <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">Output</p>
         <button
           type="button"
           className="rounded-full border border-cq-border px-3 py-1 text-xs text-cq-text-secondary disabled:opacity-50"
-          disabled={!shareEnabled}
+          disabled={!shareEnabled || !publishSlug}
+          onClick={handleShare}
         >
           Share
         </button>
@@ -204,6 +270,16 @@ export function PreviewPanel({
                 onClick={onNextLesson}
               >
                 Next Lesson
+              </button>
+            ) : null}
+            {banner.type === "success" && isProject ? (
+              <button
+                type="button"
+                className="rounded-full border border-cq-cyan/60 px-3 py-1 text-xs text-cq-cyan"
+                onClick={handlePublish}
+                disabled={publishing}
+              >
+                {publishing ? "Publishing..." : "Publish to Gallery"}
               </button>
             ) : null}
           </div>

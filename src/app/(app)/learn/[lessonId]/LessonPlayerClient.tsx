@@ -78,11 +78,13 @@ export function LessonPlayerClient({
   gems,
   progressDots,
   nextLessonId,
+  childId,
 }: {
   lesson: LessonPayload;
   gems: number;
   progressDots: ProgressDot[];
   nextLessonId: string | null;
+  childId: string;
 }) {
   const router = useRouter();
   const editorRef = useRef<BlocklyEditorHandle | null>(null);
@@ -103,6 +105,7 @@ export function LessonPlayerClient({
   const [hintAttempts, setHintAttempts] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [sessionDisplaced, setSessionDisplaced] = useState(false);
   const completedRef = useRef(false);
 
   useEffect(() => {
@@ -125,7 +128,13 @@ export function LessonPlayerClient({
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lessonId: lesson.id, code: xml }),
-    }).catch(() => null);
+    })
+      .then((res) => {
+        if (res.status === 409) {
+          setSessionDisplaced(true);
+        }
+      })
+      .catch(() => null);
   }, [lesson.id]);
 
   const handleLessonComplete = useCallback(() => {
@@ -157,6 +166,10 @@ export function LessonPlayerClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ lessonId: lesson.id, code: latestXml }),
         });
+        if (res.status === 409) {
+          setSessionDisplaced(true);
+          return;
+        }
         if (!res.ok) throw new Error("SYNC_FAILED");
         const data = (await res.json()) as {
           alreadyComplete?: boolean;
@@ -167,6 +180,7 @@ export function LessonPlayerClient({
           streakBonus?: number;
           newAchievements?: AchievementItem[];
           gems?: number;
+          sparkGraduation?: boolean;
         };
 
         if (data.alreadyComplete) return;
@@ -185,6 +199,10 @@ export function LessonPlayerClient({
         if (gemsAwarded !== null) {
           setGemCount((prev) => prev + gemsAwarded);
         }
+
+        if (data.sparkGraduation) {
+          router.push("/graduation");
+        }
       } catch {
         if (attempt === 1) {
           await new Promise((resolve) => setTimeout(resolve, 800));
@@ -196,7 +214,7 @@ export function LessonPlayerClient({
     };
 
     void syncCompletion();
-  }, [lesson.id, lesson.xpReward, workspaceXml]);
+  }, [lesson.id, lesson.xpReward, router, workspaceXml]);
 
   const handleAskByte = useCallback(async () => {
     if (gemCount < 10 || byteLoading) return;
@@ -216,6 +234,12 @@ export function LessonPlayerClient({
           attemptNumber: hintAttempts + 1,
         }),
       });
+
+      if (res.status === 409) {
+        setSessionDisplaced(true);
+        setByteLoading(false);
+        return;
+      }
 
       if (res.status === 402) {
         setByteMessage("Earn more gems to ask Byte!");
@@ -272,6 +296,30 @@ export function LessonPlayerClient({
 
   return (
     <div className="relative h-screen overflow-hidden">
+      {sessionDisplaced ? (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/70 px-6">
+          <div className="w-full max-w-md rounded-3xl border border-cq-border bg-cq-bg-elevated p-6 text-center shadow-panel">
+            <p className="text-xs uppercase tracking-[0.4em] text-cq-text-secondary">
+              Session Moved
+            </p>
+            <h2 className="mt-3 text-2xl font-heading text-white">
+              This profile was opened on another device.
+            </h2>
+            <p className="mt-2 text-sm text-cq-text-secondary">
+              Your progress was saved. Continue here to keep learning.
+            </p>
+            <button
+              type="button"
+              className="mt-5 rounded-full bg-cq-cyan px-6 py-3 text-sm font-semibold text-black shadow-glow-cyan"
+              onClick={() =>
+                router.push(`/auth/child-login?childId=${encodeURIComponent(childId)}`)
+              }
+            >
+              Continue here
+            </button>
+          </div>
+        </div>
+      ) : null}
       <XPAwardOverlay awards={awardQueue} />
       <AchievementToast queue={achievementQueue} />
       <LevelUpCeremony
@@ -336,6 +384,7 @@ export function LessonPlayerClient({
 
           <PreviewPanel
             lessonId={lesson.id}
+            lessonType={lesson.type}
             lessonXp={lesson.xpReward}
             content={lesson.content}
             workspaceXml={workspaceXml}

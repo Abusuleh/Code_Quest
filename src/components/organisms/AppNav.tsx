@@ -5,17 +5,21 @@ import { usePathname } from "next/navigation";
 
 type Props = {
   parentName?: string | null;
+  role?: string | null;
 };
 
-const links = [
+const baseLinks = [
   { href: "/parent/dashboard", label: "Parent Dashboard" },
   { href: "/dashboard", label: "Child Dashboard" },
   { href: "/quest/1", label: "Quest" },
   { href: "/placement", label: "Placement" },
+  { href: "/gallery", label: "Gallery" },
 ];
 
-export function AppNav({ parentName }: Props) {
+export function AppNav({ parentName, role }: Props) {
   const pathname = usePathname();
+  const links =
+    role === "ADMIN" ? [...baseLinks, { href: "/parent/admin", label: "Admin" }] : baseLinks;
 
   return (
     <aside className="flex h-full flex-col justify-between border-r border-cq-border bg-cq-bg-elevated px-6 py-8">

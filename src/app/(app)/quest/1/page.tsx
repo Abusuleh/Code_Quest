@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canAccessLesson } from "@/lib/subscription-gate";
 
 type LessonProgressStatus = "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "MASTERED";
 
@@ -12,8 +13,87 @@ const statusDot: Record<LessonProgressStatus, string> = {
   MASTERED: "bg-cq-violet",
 };
 
+type ModuleSummary = {
+  id: string;
+  title: string;
+  description: string;
+  order: number;
+  weeks: number;
+  skills: string[];
+  lessons: {
+    id: string;
+    title: string;
+    type: string;
+    xpReward: number;
+    estimatedMin: number;
+  }[];
+};
+
+function LockedModuleCard({ module }: { module: ModuleSummary }) {
+  return (
+    <section
+      className="rounded-3xl border border-cq-border bg-cq-bg-elevated/60 p-6 shadow-panel"
+      aria-label={`${module.title} locked`}
+    >
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
+            Module {module.order}
+          </p>
+          <h2 className="mt-2 text-2xl font-heading text-white">{module.title}</h2>
+          <p className="mt-2 text-sm text-cq-text-secondary">{module.description}</p>
+          <p className="mt-3 text-xs text-cq-text-secondary">
+            {module.lessons.length} lessons - {module.weeks} weeks
+          </p>
+        </div>
+        <div className="flex items-center gap-3 rounded-full border border-cq-border bg-cq-bg px-4 py-2 text-xs text-cq-text-secondary">
+          <span className="text-base text-cq-gold">LOCK</span>
+          <span>Locked for Free tier</span>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-wrap gap-2">
+        {module.skills.map((skill) => (
+          <span
+            key={skill}
+            className="rounded-full border border-cq-border-bright bg-cq-bg-overlay px-3 py-1 text-xs text-cq-text-secondary"
+          >
+            {skill}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-6 rounded-2xl border border-cq-border bg-cq-bg-panel/60 p-6 text-sm text-cq-text-secondary">
+        <p className="text-sm text-white">
+          You&apos;ve mastered Module 1 - the adventure continues.
+        </p>
+        <p className="mt-2 text-sm text-cq-text-secondary">
+          Unlock the Spark Zone to keep building, drawing, and creating new worlds with Byte.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <Link
+            href="/pricing?locked=true"
+            className="inline-flex items-center justify-center rounded-full border border-cq-cyan/60 px-5 py-2 text-xs uppercase tracking-[0.3em] text-cq-cyan"
+          >
+            Unlock this module
+          </Link>
+          <Link
+            href="/quest/1"
+            className="inline-flex items-center justify-center rounded-full border border-cq-border px-5 py-2 text-xs uppercase tracking-[0.3em] text-cq-text-secondary"
+          >
+            Keep exploring Module 1
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default async function QuestPage() {
   const session = await getServerSession(authOptions);
+  const subscription = session?.user?.id
+    ? await prisma.subscription.findUnique({ where: { userId: session.user.id } })
+    : null;
   const phase = await prisma.phase.findUnique({
     where: { number: 1 },
     select: {
@@ -65,6 +145,67 @@ export default async function QuestPage() {
     (status) => status === "COMPLETED" || status === "MASTERED",
   ).length;
 
+  const moduleSections = phase.modules.map((module) => {
+    const unlocked = canAccessLesson(subscription, module.order);
+    if (!unlocked) {
+      return <LockedModuleCard key={module.id} module={module} />;
+    }
+
+    return (
+      <section
+        key={module.id}
+        className={`rounded-3xl border p-6 shadow-panel ${
+          unlocked
+            ? "border-cq-cyan/60 bg-gradient-to-br from-cq-bg-elevated to-cq-bg-panel"
+            : "border-cq-border bg-cq-bg-elevated/60"
+        }`}
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
+              Module {module.order}
+            </p>
+            <h2 className="mt-2 text-2xl font-heading text-white">{module.title}</h2>
+            <p className="mt-2 text-sm text-cq-text-secondary">{module.description}</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {module.skills.map((skill) => (
+              <span
+                key={skill}
+                className="rounded-full border border-cq-border-bright bg-cq-bg-overlay px-3 py-1 text-xs text-cq-text-secondary"
+              >
+                {skill}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {module.lessons.map((lesson) => {
+            const status = progressMap.get(lesson.id) ?? "NOT_STARTED";
+            return (
+              <Link
+                key={lesson.id}
+                href={`/learn/${lesson.id}`}
+                className="group rounded-2xl border border-cq-border bg-cq-bg-panel p-4 transition hover:border-cq-cyan/60 hover:shadow-glow-cyan"
+              >
+                <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
+                  <span>{lesson.type}</span>
+                  <span className={`h-2 w-2 rounded-full ${statusDot[status]}`} />
+                </div>
+                <h3 className="mt-3 text-lg font-heading text-white">{lesson.title}</h3>
+                <div className="mt-4 flex items-center justify-between text-xs text-cq-text-secondary">
+                  <span>{lesson.xpReward} XP</span>
+                  <span>{lesson.estimatedMin} min</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+    );
+  });
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-cq-bg px-6 py-12 text-cq-text-primary">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,212,255,0.2)_0,_transparent_50%)] opacity-60" />
@@ -77,7 +218,7 @@ export default async function QuestPage() {
               {phase.kingdom} Kingdom
             </p>
             <h1 className="mt-2 text-3xl font-heading text-white">
-              {phase.title} — Phase {phase.number}
+              {phase.title} - Phase {phase.number}
             </h1>
             <p className="mt-2 text-sm text-cq-text-secondary">
               {completedCount} of {lessonCount} lessons complete
@@ -100,85 +241,7 @@ export default async function QuestPage() {
           </div>
         </header>
 
-        <div className="space-y-6">
-          {phase.modules.map((module) => {
-            const unlocked = module.order === 1;
-            return (
-              <section
-                key={module.id}
-                className={`rounded-3xl border p-6 shadow-panel ${
-                  unlocked
-                    ? "border-cq-cyan/60 bg-gradient-to-br from-cq-bg-elevated to-cq-bg-panel"
-                    : "border-cq-border bg-cq-bg-elevated/60"
-                }`}
-              >
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
-                      Module {module.order}
-                    </p>
-                    <h2 className="mt-2 text-2xl font-heading text-white">{module.title}</h2>
-                    <p className="mt-2 text-sm text-cq-text-secondary">{module.description}</p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {module.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="rounded-full border border-cq-border-bright bg-cq-bg-overlay px-3 py-1 text-xs text-cq-text-secondary"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {unlocked ? (
-                  <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {module.lessons.map((lesson) => {
-                      const status = progressMap.get(lesson.id) ?? "NOT_STARTED";
-                      return (
-                        <Link
-                          key={lesson.id}
-                          href={`/learn/${lesson.id}`}
-                          className="group rounded-2xl border border-cq-border bg-cq-bg-panel p-4 transition hover:border-cq-cyan/60 hover:shadow-glow-cyan"
-                        >
-                          <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
-                            <span>{lesson.type}</span>
-                            <span className={`h-2 w-2 rounded-full ${statusDot[status]}`} />
-                          </div>
-                          <h3 className="mt-3 text-lg font-heading text-white">{lesson.title}</h3>
-                          <div className="mt-4 flex items-center justify-between text-xs text-cq-text-secondary">
-                            <span>{lesson.xpReward} XP</span>
-                            <span>{lesson.estimatedMin} min</span>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="mt-6 rounded-2xl border border-cq-border bg-cq-bg-panel/60 p-6 text-sm text-cq-text-secondary">
-                    Unlocks after Module {module.order - 1}.
-                  </div>
-                )}
-              </section>
-            );
-          })}
-
-          {Array.from({ length: 4 }).map((_, index) => (
-            <section
-              key={`locked-${index + 2}`}
-              className="rounded-3xl border border-cq-border bg-cq-bg-elevated/40 p-6 opacity-70"
-            >
-              <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
-                Module {index + 2}
-              </p>
-              <h2 className="mt-2 text-xl font-heading text-white">Locked Kingdom</h2>
-              <p className="mt-2 text-sm text-cq-text-secondary">
-                Unlocks after Module {index + 1}.
-              </p>
-            </section>
-          ))}
-        </div>
+        <div className="space-y-6">{moduleSections}</div>
       </div>
     </main>
   );

@@ -10,6 +10,7 @@ declare module "next-auth" {
       role?: string;
     };
     activeChildId?: string;
+    activeChildSessionToken?: string;
   }
 }
 
@@ -18,5 +19,6 @@ declare module "next-auth/jwt" {
     userId?: string;
     role?: string;
     activeChildId?: string;
+    activeChildSessionToken?: string;
   }
 }
