@@ -10,6 +10,7 @@ CodeQuest is a narrative-driven coding education platform for children ages 6-14
 - M4: XP Engine + Gamification (complete — March 1, 2026)
 - M5: Lesson Player (complete — March 1, 2026)
 - M6: Phase 1 Complete + Stripe + Gallery + Graduation (complete — March 2, 2026)
+- M7: Builder's Guild (complete — March 3, 2026)
 
 ## Tech Stack
 
