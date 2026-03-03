@@ -18,7 +18,7 @@ export type BlocklyEditorHandle = {
   clearWorkspace: () => void;
 };
 
-const TOOLBOX = {
+export const BLOCKLY_TOOLBOX = {
   kind: "categoryToolbox",
   contents: [
     {
@@ -78,7 +78,7 @@ const TOOLBOX = {
   ],
 };
 
-const THEME = Blockly.Theme.defineTheme("codequest", {
+export const BLOCKLY_THEME = Blockly.Theme.defineTheme("codequest", {
   name: "codequest",
   base: Blockly.Themes.Classic,
   componentStyles: {
@@ -112,7 +112,7 @@ const THEME = Blockly.Theme.defineTheme("codequest", {
   },
 });
 
-function registerBlocks() {
+export function registerBlocks() {
   if (Blockly.Blocks["event_whenflagclicked"]) return;
 
   Blockly.Blocks["event_whenflagclicked"] = {
@@ -319,8 +319,8 @@ export const BlocklyEditor = forwardRef<BlocklyEditorHandle, Props>(
       registerBlocks();
 
       const workspace = Blockly.inject(containerRef.current, {
-        toolbox: TOOLBOX,
-        theme: THEME,
+        toolbox: BLOCKLY_TOOLBOX,
+        theme: BLOCKLY_THEME,
         renderer: "zelos",
         zoom: {
           controls: true,

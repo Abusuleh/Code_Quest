@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { awardXP } from "@/lib/xp-engine";
-import { checkSuccessCondition } from "@/lib/lesson-success";
+import { checkSuccessCondition, checkPythonSuccess } from "@/lib/lesson-success";
 import { render } from "@react-email/render";
 import { getResend } from "@/lib/resend";
 import { SparkGraduationEmail } from "@/emails/SparkGraduationEmail";
@@ -52,7 +52,11 @@ export async function POST(request: NextRequest) {
 
   const content = lesson.content as { successCondition?: string };
   const successCondition = content?.successCondition ?? "";
-  if (!checkSuccessCondition(code, successCondition)) {
+  const isPhase2 = lesson.module.phase.number === 2;
+  const success = isPhase2
+    ? checkPythonSuccess(code, successCondition)
+    : checkSuccessCondition(code, successCondition);
+  if (!success) {
     return NextResponse.json({ error: "CONDITION_NOT_MET" }, { status: 400 });
   }
 
@@ -131,7 +135,15 @@ export async function POST(request: NextRequest) {
   });
 
   let sparkGraduation = false;
+  let builderGraduation = false;
   let sparkAchievement: {
+    id: string;
+    title: string;
+    rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
+    xpReward: number;
+    gemReward: number;
+  } | null = null;
+  let builderAchievement: {
     id: string;
     title: string;
     rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
@@ -198,11 +210,56 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const builderCompletedCount = await prisma.progress.count({
+    where: {
+      childId: session.activeChildId,
+      status: { in: ["COMPLETED", "MASTERED"] },
+      lesson: { module: { phase: { number: 2 } } },
+    },
+  });
+
+  if (builderCompletedCount >= 50) {
+    const builder = await prisma.achievement.findUnique({
+      where: { key: "BUILDER_BADGE" },
+      select: { id: true, title: true, rarity: true, xpReward: true, gemReward: true },
+    });
+    if (builder) {
+      const existingBuilder = await prisma.childAchievement.findUnique({
+        where: {
+          childId_achievementId: {
+            childId: session.activeChildId,
+            achievementId: builder.id,
+          },
+        },
+      });
+
+      if (!existingBuilder) {
+        await prisma.childAchievement.create({
+          data: { childId: session.activeChildId, achievementId: builder.id },
+        });
+        await awardXP(session.activeChildId, "BUILDER_BADGE", {
+          achievementKey: "BUILDER_BADGE",
+        });
+        await prisma.child.update({
+          where: { id: session.activeChildId },
+          data: { currentPhase: 3 },
+        });
+        builderAchievement = builder;
+        builderGraduation = true;
+      }
+    }
+  }
+
   const finalResult = bonusResult ?? xpResult;
   const updatedChild = await prisma.child.findUnique({
     where: { id: session.activeChildId },
     select: { xpTotal: true, xpLevel: true },
   });
+
+  const extraAchievements = [
+    ...(sparkAchievement ? [sparkAchievement] : []),
+    ...(builderAchievement ? [builderAchievement] : []),
+  ];
 
   return NextResponse.json({
     success: true,
@@ -211,10 +268,11 @@ export async function POST(request: NextRequest) {
     leveledUp: finalResult.leveledUp,
     newLevel: finalResult.newLevel,
     streakBonus: xpResult.streakBonus,
-    newAchievements: sparkAchievement
-      ? [...achievementRecords, sparkAchievement]
+    newAchievements: extraAchievements.length
+      ? [...achievementRecords, ...extraAchievements]
       : achievementRecords,
     gems: lesson.gemReward,
     sparkGraduation,
+    builderGraduation,
   });
 }

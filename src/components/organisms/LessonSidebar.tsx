@@ -15,11 +15,14 @@ type Props = {
   objective: string;
   currentLessonId: string;
   progressDots: ProgressDot[];
-  byteMessage: string;
-  byteLoading: boolean;
+  mentorName: string;
+  mentorInitials: string;
+  mentorMessage: string;
+  mentorLoading: boolean;
   gems: number;
-  onAskByte: () => void;
+  onAskMentor: () => void;
   onRun: () => void;
+  accent?: "cyan" | "violet";
 };
 
 const statusStyles: Record<ProgressDot["status"], string> = {
@@ -37,18 +40,47 @@ export function LessonSidebar({
   objective,
   currentLessonId,
   progressDots,
-  byteMessage,
-  byteLoading,
+  mentorName,
+  mentorInitials,
+  mentorMessage,
+  mentorLoading,
   gems,
-  onAskByte,
+  onAskMentor,
   onRun,
+  accent = "cyan",
 }: Props) {
   const insufficientGems = gems < 10;
+  const accentStyles =
+    accent === "violet"
+      ? {
+          badge: "border-cq-violet/50 bg-cq-bg-overlay text-cq-violet",
+          objective: "border-l-cq-violet",
+          bubble: "border-cq-violet/30",
+          mentorAvatar: "border-cq-violet/40 text-cq-violet",
+          askBadge: "text-cq-violet",
+          runButton: "bg-cq-violet text-white shadow-glow-primary",
+          runHover: "hover:shadow-glow-primary",
+          dots: "bg-cq-violet",
+          ring: "ring-cq-violet",
+        }
+      : {
+          badge: "border-cq-cyan/50 bg-cq-bg-overlay text-cq-cyan",
+          objective: "border-l-cq-cyan",
+          bubble: "border-cq-cyan/30",
+          mentorAvatar: "border-cq-cyan/40 text-cq-cyan",
+          askBadge: "text-cq-cyan",
+          runButton: "bg-cq-cyan text-black shadow-glow-cyan",
+          runHover: "hover:shadow-[0_0_24px_rgba(0,212,255,0.6)]",
+          dots: "bg-cq-cyan",
+          ring: "ring-cq-cyan",
+        };
 
   return (
     <aside className="flex h-full w-[280px] flex-col border-r border-cq-border bg-cq-bg-elevated px-6 py-6">
       <div className="space-y-4">
-        <span className="inline-flex rounded-full border border-cq-cyan/50 bg-cq-bg-overlay px-3 py-1 text-xs uppercase tracking-[0.3em] text-cq-cyan">
+        <span
+          className={`inline-flex rounded-full border px-3 py-1 text-xs uppercase tracking-[0.3em] ${accentStyles.badge}`}
+        >
           {phaseTitle}
         </span>
         <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
@@ -56,25 +88,35 @@ export function LessonSidebar({
         </p>
         <h1 className="text-2xl font-heading text-white">{lessonTitle}</h1>
 
-        <div className="rounded-2xl border border-cq-border bg-cq-bg-panel p-4 border-l-4 border-l-cq-cyan">
+        <div
+          className={`rounded-2xl border border-cq-border bg-cq-bg-panel p-4 border-l-4 ${accentStyles.objective}`}
+        >
           <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">Objective</p>
           <p className="mt-2 text-sm text-white">{objective}</p>
         </div>
 
-        <div className="relative rounded-2xl border border-cq-cyan/30 bg-cq-bg-overlay p-4">
-          <div className="absolute -top-4 left-4 flex h-8 w-8 items-center justify-center rounded-full border border-cq-cyan/40 bg-cq-bg-panel text-xs font-display text-cq-cyan">
-            BT
+        <div className={`relative rounded-2xl border bg-cq-bg-overlay p-4 ${accentStyles.bubble}`}>
+          <div
+            className={`absolute -top-4 left-4 flex h-8 w-8 items-center justify-center rounded-full border bg-cq-bg-panel text-xs font-display ${accentStyles.mentorAvatar}`}
+          >
+            {mentorInitials}
           </div>
-          <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">Byte says</p>
+          <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
+            {mentorName} says
+          </p>
           <div className="mt-3 min-h-[72px] text-sm text-white">
-            {byteLoading ? (
+            {mentorLoading ? (
               <div className="flex items-center gap-2 text-cq-text-secondary">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-cq-cyan" />
-                <span className="h-2 w-2 animate-pulse rounded-full bg-cq-cyan/80" />
-                <span className="h-2 w-2 animate-pulse rounded-full bg-cq-cyan/60" />
+                <span className={`h-2 w-2 animate-pulse rounded-full ${accentStyles.dots}`} />
+                <span
+                  className={`h-2 w-2 animate-pulse rounded-full ${accentStyles.dots} opacity-80`}
+                />
+                <span
+                  className={`h-2 w-2 animate-pulse rounded-full ${accentStyles.dots} opacity-60`}
+                />
               </div>
             ) : (
-              byteMessage || "Byte is ready when you are!"
+              mentorMessage || `${mentorName} is ready when you are!`
             )}
           </div>
         </div>
@@ -86,7 +128,7 @@ export function LessonSidebar({
               <span
                 key={dot.id}
                 className={`h-3 w-3 rounded-full ${
-                  dot.id === currentLessonId ? "ring-2 ring-cq-cyan" : ""
+                  dot.id === currentLessonId ? `ring-2 ${accentStyles.ring}` : ""
                 } ${statusStyles[dot.status]}`}
               />
             ))}
@@ -98,18 +140,20 @@ export function LessonSidebar({
         <Button
           type="button"
           className="w-full justify-between"
-          onClick={onAskByte}
-          disabled={insufficientGems || byteLoading}
-          title={insufficientGems ? "Earn more gems to ask Byte!" : undefined}
+          onClick={onAskMentor}
+          disabled={insufficientGems || mentorLoading}
+          title={insufficientGems ? `Earn more gems to ask ${mentorName}!` : undefined}
         >
-          <span>Ask Byte</span>
-          <span className="rounded-full bg-cq-bg-overlay px-2 py-1 text-xs text-cq-cyan">
+          <span>Ask {mentorName}</span>
+          <span
+            className={`rounded-full bg-cq-bg-overlay px-2 py-1 text-xs ${accentStyles.askBadge}`}
+          >
             +10 Gems
           </span>
         </Button>
         <button
           type="button"
-          className="w-full rounded-full bg-cq-cyan px-4 py-3 text-sm font-bold text-black shadow-glow-cyan transition hover:shadow-[0_0_24px_rgba(0,212,255,0.6)]"
+          className={`w-full rounded-full px-4 py-3 text-sm font-bold transition ${accentStyles.runButton} ${accentStyles.runHover}`}
           onClick={onRun}
         >
           Run Code

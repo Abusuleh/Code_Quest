@@ -120,6 +120,15 @@ const achievements = [
     gemReward: 50,
     rarity: "LEGENDARY",
   },
+  {
+    key: "BUILDER_BADGE",
+    title: "Builder's Guild Champion",
+    description: "Complete every lesson in Phase 2 and earn the Builder's Emblem.",
+    iconUrl: "/achievements/builder-badge.png",
+    xpReward: 300,
+    gemReward: 75,
+    rarity: "LEGENDARY",
+  },
 ];
 
 async function main() {

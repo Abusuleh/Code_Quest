@@ -6,20 +6,27 @@ import { usePathname } from "next/navigation";
 type Props = {
   parentName?: string | null;
   role?: string | null;
+  childPhase?: number | null;
 };
 
 const baseLinks = [
   { href: "/parent/dashboard", label: "Parent Dashboard" },
   { href: "/dashboard", label: "Child Dashboard" },
   { href: "/quest/1", label: "Quest" },
+  { href: "/quest/2", label: "Builder's Guild", requiresPhase2: true },
+  { href: "/guild", label: "Guild", requiresPhase2: true },
+  { href: "/forge-trial", label: "Forge Trial", requiresPhase2: true },
   { href: "/placement", label: "Placement" },
   { href: "/gallery", label: "Gallery" },
 ];
 
-export function AppNav({ parentName, role }: Props) {
+export function AppNav({ parentName, role, childPhase }: Props) {
   const pathname = usePathname();
-  const links =
-    role === "ADMIN" ? [...baseLinks, { href: "/parent/admin", label: "Admin" }] : baseLinks;
+  const links = baseLinks.filter(
+    (link) => !("requiresPhase2" in link) || (childPhase ?? 0) >= 2,
+  );
+  const finalLinks =
+    role === "ADMIN" ? [...links, { href: "/parent/admin", label: "Admin" }] : links;
 
   return (
     <aside className="flex h-full flex-col justify-between border-r border-cq-border bg-cq-bg-elevated px-6 py-8">
@@ -28,7 +35,7 @@ export function AppNav({ parentName, role }: Props) {
           CodeQuest
         </Link>
         <nav className="space-y-2">
-          {links.map((link) => (
+          {finalLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}

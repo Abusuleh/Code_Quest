@@ -121,7 +121,11 @@ export default async function ChildDashboardPage() {
   const hasPlacement = Boolean(placement);
   const contentSeeded = achievementCount > 0 && skillCardCount > 0;
   const hasLessons = lessonCount > 0;
-  const continueHref = nextLesson ? `/learn/${nextLesson.id}` : "/quest/1";
+  const continueHref = nextLesson
+    ? `/learn/${nextLesson.id}`
+    : child.currentPhase >= 2
+      ? "/quest/2"
+      : "/quest/1";
 
   const fallback = kingdomFallback[child.currentPhase] ?? kingdomFallback[1];
   const kingdomName = phase?.kingdom ?? fallback.kingdom;

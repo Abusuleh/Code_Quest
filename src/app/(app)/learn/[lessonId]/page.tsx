@@ -34,6 +34,7 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
       estimatedMin: true,
       order: true,
       starterCode: true,
+      solutionCode: true,
       moduleId: true,
       module: {
         select: {
@@ -59,7 +60,7 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
   const subscription = await prisma.subscription.findUnique({
     where: { userId: session.user.id },
   });
-  const canAccess = canAccessLesson(subscription, lesson.module.order);
+  const canAccess = canAccessLesson(subscription, lesson.module.order, lesson.module.phase.number);
   if (!canAccess) {
     return (
       <LessonLockedView
@@ -67,6 +68,8 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
         moduleTitle={lesson.module.title}
         objective={(lesson.content as LessonContent).objective ?? ""}
         lessonId={lesson.id}
+        phaseNumber={lesson.module.phase.number}
+        mentorName={lesson.module.phase.number === 2 ? "Nova" : "Byte"}
       />
     );
   }
@@ -110,7 +113,10 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
   });
 
   const content = lesson.content as LessonContent;
-  const starterCode = (lesson.starterCode as { xml?: string } | null) ?? null;
+  const starterCode =
+    (lesson.starterCode as { xml?: string; python?: string } | null) ?? null;
+  const solutionCode =
+    (lesson.solutionCode as { xml?: string; python?: string } | null) ?? null;
 
   return (
     <LessonPlayerClient
@@ -124,6 +130,7 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
         estimatedMin: lesson.estimatedMin,
         order: lesson.order,
         starterCode,
+        solutionCode,
         module: lesson.module,
       }}
       gems={child?.gems ?? 0}
