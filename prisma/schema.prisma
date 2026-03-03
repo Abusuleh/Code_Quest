@@ -56,6 +56,7 @@ model Child {
   gems          Int       @default(0)
   guildId       String?
   guild         Guild?    @relation(fields: [guildId], references: [id])
+  forgeEntries  ForgeTrialEntry[]
   progress      Progress[]
   placementResults PlacementResult[]
   achievements  ChildAchievement[]
@@ -190,8 +191,41 @@ model Guild {
   name      String   @unique
   emblem    String
   xpTotal   Int      @default(0)
+  description String?
+  maxMembers Int      @default(10)
+  trialWins  Int      @default(0)
+  createdById String
+  isOpen     Boolean  @default(true)
   members   Child[]
   createdAt DateTime @default(now())
+}
+
+model ForgeTrial {
+  id          String            @id @default(cuid())
+  weekStart   DateTime
+  title       String
+  description String
+  challenge   Json
+  phase       Int               @default(2)
+  entries     ForgeTrialEntry[]
+  createdAt   DateTime          @default(now())
+
+  @@unique([weekStart, phase])
+}
+
+model ForgeTrialEntry {
+  id          String     @id @default(cuid())
+  trialId     String
+  trial       ForgeTrial @relation(fields: [trialId], references: [id])
+  childId     String
+  child       Child      @relation(fields: [childId], references: [id])
+  code        String
+  score       Int        @default(0)
+  xpAwarded   Int        @default(0)
+  submittedAt DateTime   @default(now())
+
+  @@unique([trialId, childId])
+  @@index([trialId, score])
 }
 
 // -- PROJECTS ------------------------------------------
@@ -343,6 +377,9 @@ enum XPEventType {
   FIRST_LESSON
   PERFECT_SCORE
   PROJECT_PUBLISH
+  GUILD_BONUS
+  FORGE_TRIAL_WIN
+  BUILDER_BADGE
 }
 
 enum AchievementRarity {

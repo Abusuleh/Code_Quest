@@ -2,7 +2,8 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
-import { getStripe, resolvePlanFromPriceId, seatsForPlan } from "@/lib/stripe";
+import { getStripe, resolvePlanFromPriceId } from "@/lib/stripe";
+import { seatsForPlan, type SeatPlan } from "@/lib/guild-engine";
 
 type SubscriptionStatus = "ACTIVE" | "PAST_DUE" | "CANCELLED" | "TRIALING";
 
@@ -38,7 +39,7 @@ async function syncSubscriptionFromStripe(
       currentPeriodEnd,
       cancelAtPeriodEnd: Boolean(subscription.cancel_at_period_end),
       stripeSubscriptionId: subscription.id,
-      childSeats: plan === "FREE" ? 1 : seatsForPlan(plan as "SPARK" | "FAMILY" | "CHAMPION"),
+      childSeats: seatsForPlan(plan as SeatPlan),
       stripeNgn: true,
     },
   });
@@ -89,8 +90,7 @@ export async function POST(request: NextRequest) {
               status: "ACTIVE",
               stripeSubscriptionId: subscriptionId ?? null,
               stripeNgn: true,
-              childSeats:
-                plan && plan !== "FREE" ? seatsForPlan(plan as "SPARK" | "FAMILY" | "CHAMPION") : 1,
+              childSeats: plan ? seatsForPlan(plan as SeatPlan) : 1,
             },
           });
         }

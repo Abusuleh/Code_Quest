@@ -75,8 +75,3 @@ export function resolvePlanFromPriceId(priceId: string): StripePlan | null {
     return "CHAMPION";
   return null;
 }
-
-export function seatsForPlan(plan: StripePlan): number {
-  if (plan === "FAMILY" || plan === "CHAMPION") return 3;
-  return 1;
-}

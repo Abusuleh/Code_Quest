@@ -4,7 +4,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { LessonSidebar } from "@/components/organisms/LessonSidebar";
 import { BlocklyEditor, type BlocklyEditorHandle } from "@/components/organisms/BlocklyEditor";
+import { MonacoEditor, type MonacoEditorHandle } from "@/components/organisms/MonacoEditor";
 import { PreviewPanel } from "@/components/organisms/PreviewPanel";
+import { PythonPreviewPanel } from "@/components/organisms/PythonPreviewPanel";
+import { BridgeView } from "@/components/organisms/BridgeView";
 import { AchievementToast } from "@/components/molecules/AchievementToast";
 import { XPAwardOverlay } from "@/components/organisms/XPAwardOverlay";
 import { LevelUpCeremony } from "@/components/organisms/LevelUpCeremony";
@@ -26,7 +29,8 @@ type LessonPayload = {
   gemReward: number;
   estimatedMin: number;
   order: number;
-  starterCode: { xml?: string } | null;
+  starterCode: { xml?: string; python?: string } | null;
+  solutionCode: { python?: string } | null;
   module: {
     title: string;
     order: number;
@@ -88,11 +92,13 @@ export function LessonPlayerClient({
 }) {
   const router = useRouter();
   const editorRef = useRef<BlocklyEditorHandle | null>(null);
+  const monacoRef = useRef<MonacoEditorHandle | null>(null);
   const [workspaceXml, setWorkspaceXml] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
+  const [pythonCode, setPythonCode] = useState("");
   const [runSignal, setRunSignal] = useState(0);
-  const [byteMessage, setByteMessage] = useState(lesson.content.hint ?? "");
-  const [byteLoading, setByteLoading] = useState(false);
+  const [mentorMessage, setMentorMessage] = useState(lesson.content.hint ?? "");
+  const [mentorLoading, setMentorLoading] = useState(false);
   const [gemCount, setGemCount] = useState(gems);
   const [awardQueue, setAwardQueue] = useState<
     { id: string; amount: number; x?: number; y?: number }[]
@@ -107,27 +113,45 @@ export function LessonPlayerClient({
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
   const [sessionDisplaced, setSessionDisplaced] = useState(false);
   const completedRef = useRef(false);
+  const isPhase2 = lesson.module.phase.number === 2;
+  const isBridgeLesson = isPhase2 && lesson.module.order === 1;
+  const mentorName = isPhase2 ? "Nova" : "Byte";
+  const mentorInitials = isPhase2 ? "NV" : "BT";
+  const accent = isPhase2 ? "violet" : "cyan";
 
   useEffect(() => {
     completedRef.current = false;
-    setByteMessage(lesson.content.hint ?? "");
+    setMentorMessage(lesson.content.hint ?? "");
     setHintAttempts(0);
     setShareEnabled(false);
+    setLastError(null);
+    setSyncMessage(null);
   }, [lesson.content.hint, lesson.id]);
 
   const handleRun = useCallback(() => {
-    if (!editorRef.current) return;
-    const xml = editorRef.current.getWorkspaceXml();
-    const code = editorRef.current.getGeneratedCode();
-    setWorkspaceXml(xml);
-    setGeneratedCode(code);
+    let codeToSync = "";
+    if (isPhase2) {
+      const code = monacoRef.current?.getValue() ?? pythonCode;
+      setPythonCode(code);
+      codeToSync = code;
+    } else {
+      if (!editorRef.current) return;
+      const xml = editorRef.current.getWorkspaceXml();
+      const code = editorRef.current.getGeneratedCode();
+      setWorkspaceXml(xml);
+      setGeneratedCode(code);
+      codeToSync = xml;
+    }
     setRunSignal(Date.now());
     setSyncMessage(null);
 
     fetch("/api/progress", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lessonId: lesson.id, code: xml }),
+      body: JSON.stringify({
+        lessonId: lesson.id,
+        code: codeToSync,
+      }),
     })
       .then((res) => {
         if (res.status === 409) {
@@ -135,12 +159,14 @@ export function LessonPlayerClient({
         }
       })
       .catch(() => null);
-  }, [lesson.id]);
+  }, [isPhase2, lesson.id, pythonCode]);
 
   const handleLessonComplete = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
-    const latestXml = editorRef.current?.getWorkspaceXml() ?? workspaceXml;
+    const latestCode = isPhase2
+      ? monacoRef.current?.getValue() ?? pythonCode
+      : editorRef.current?.getWorkspaceXml() ?? workspaceXml;
 
     const awardId = `${Date.now()}-${Math.random()}`;
     setAwardQueue((prev) => [
@@ -157,31 +183,35 @@ export function LessonPlayerClient({
     }, 1500);
 
     setShareEnabled(true);
-    setByteMessage(celebrationMessages[lesson.id] ?? "Great work, coder!");
+    setMentorMessage(
+      celebrationMessages[lesson.id] ??
+        (isPhase2 ? "Excellent build, engineer. Want to push it further?" : "Great work, coder!"),
+    );
 
     const syncCompletion = async (attempt = 1) => {
       try {
         const res = await fetch("/api/progress/complete", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lessonId: lesson.id, code: latestXml }),
+          body: JSON.stringify({ lessonId: lesson.id, code: latestCode }),
         });
         if (res.status === 409) {
           setSessionDisplaced(true);
           return;
         }
         if (!res.ok) throw new Error("SYNC_FAILED");
-        const data = (await res.json()) as {
-          alreadyComplete?: boolean;
-          xpAwarded?: number;
-          xpTotal?: number;
-          leveledUp?: boolean;
-          newLevel?: number;
-          streakBonus?: number;
-          newAchievements?: AchievementItem[];
-          gems?: number;
-          sparkGraduation?: boolean;
-        };
+          const data = (await res.json()) as {
+            alreadyComplete?: boolean;
+            xpAwarded?: number;
+            xpTotal?: number;
+            leveledUp?: boolean;
+            newLevel?: number;
+            streakBonus?: number;
+            newAchievements?: AchievementItem[];
+            gems?: number;
+            sparkGraduation?: boolean;
+            builderGraduation?: boolean;
+          };
 
         if (data.alreadyComplete) return;
 
@@ -200,10 +230,14 @@ export function LessonPlayerClient({
           setGemCount((prev) => prev + gemsAwarded);
         }
 
-        if (data.sparkGraduation) {
-          router.push("/graduation");
-        }
-      } catch {
+          if (data.sparkGraduation) {
+            router.push("/graduation");
+            return;
+          }
+          if ((data as { builderGraduation?: boolean }).builderGraduation) {
+            router.push("/graduation/builders-guild");
+          }
+        } catch {
         if (attempt === 1) {
           await new Promise((resolve) => setTimeout(resolve, 800));
           await syncCompletion(2);
@@ -214,22 +248,22 @@ export function LessonPlayerClient({
     };
 
     void syncCompletion();
-  }, [lesson.id, lesson.xpReward, router, workspaceXml]);
+  }, [isPhase2, lesson.id, lesson.xpReward, pythonCode, router, workspaceXml]);
 
-  const handleAskByte = useCallback(async () => {
-    if (gemCount < 10 || byteLoading) return;
-    setByteLoading(true);
+  const handleAskMentor = useCallback(async () => {
+    if (gemCount < 10 || mentorLoading) return;
+    setMentorLoading(true);
     setHintAttempts((prev) => prev + 1);
-    setByteMessage("");
+    setMentorMessage("");
     setSyncMessage(null);
 
     try {
-      const res = await fetch("/api/mentor/hint", {
+      const res = await fetch(isPhase2 ? "/api/mentor/nova-hint" : "/api/mentor/hint", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lessonId: lesson.id,
-          childCode: workspaceXml,
+          childCode: isPhase2 ? pythonCode : workspaceXml,
           errorMessage: lastError,
           attemptNumber: hintAttempts + 1,
         }),
@@ -237,19 +271,19 @@ export function LessonPlayerClient({
 
       if (res.status === 409) {
         setSessionDisplaced(true);
-        setByteLoading(false);
+        setMentorLoading(false);
         return;
       }
 
       if (res.status === 402) {
-        setByteMessage("Earn more gems to ask Byte!");
-        setByteLoading(false);
+        setMentorMessage(`Earn more gems to ask ${mentorName}!`);
+        setMentorLoading(false);
         return;
       }
 
       if (!res.body) {
-        setByteMessage("Byte is thinking... try again?");
-        setByteLoading(false);
+        setMentorMessage(`${mentorName} is thinking... try again?`);
+        setMentorLoading(false);
         return;
       }
 
@@ -263,23 +297,33 @@ export function LessonPlayerClient({
         done = result.done;
         if (result.value) {
           const chunk = decoder.decode(result.value);
-          setByteMessage((prev) => prev + chunk);
+          setMentorMessage((prev) => prev + chunk);
         }
       }
     } catch {
-      setByteMessage("Byte will be back soon. Try again!");
+      setMentorMessage(`${mentorName} will be back soon. Try again!`);
     } finally {
-      setByteLoading(false);
+      setMentorLoading(false);
     }
-  }, [byteLoading, gemCount, hintAttempts, lastError, lesson.id, workspaceXml]);
+  }, [
+    gemCount,
+    hintAttempts,
+    isPhase2,
+    lastError,
+    lesson.id,
+    mentorLoading,
+    mentorName,
+    pythonCode,
+    workspaceXml,
+  ]);
 
   const handleNextLesson = useCallback(() => {
     if (nextLessonId) {
       router.push(`/learn/${nextLessonId}`);
       return;
     }
-    router.push("/quest/1");
-  }, [nextLessonId, router]);
+    router.push(isPhase2 ? "/quest/2" : "/quest/1");
+  }, [isPhase2, nextLessonId, router]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -339,11 +383,14 @@ export function LessonPlayerClient({
             objective={lesson.content.objective ?? ""}
             currentLessonId={lesson.id}
             progressDots={progressWithCurrent}
-            byteMessage={byteMessage}
-            byteLoading={byteLoading}
+            mentorName={mentorName}
+            mentorInitials={mentorInitials}
+            mentorMessage={mentorMessage}
+            mentorLoading={mentorLoading}
             gems={gemCount}
-            onAskByte={handleAskByte}
+            onAskMentor={handleAskMentor}
             onRun={handleRun}
+            accent={accent}
           />
         </div>
 
@@ -367,13 +414,25 @@ export function LessonPlayerClient({
                 Lesson
               </button>
             </div>
-            <div className="flex-1">
-              <BlocklyEditor
-                ref={editorRef}
-                lessonId={lesson.id}
-                starterCode={lesson.starterCode}
-                onXmlChange={setWorkspaceXml}
-              />
+            <div className={isPhase2 ? "flex-1 space-y-4 p-4 lg:p-6" : "flex-1"}>
+              {isPhase2 && isBridgeLesson ? <BridgeView lessonId={lesson.id} /> : null}
+              {isPhase2 ? (
+                <div className="min-h-[360px] flex-1 overflow-hidden rounded-2xl border border-cq-border bg-cq-bg-panel">
+                  <MonacoEditor
+                    ref={monacoRef}
+                    lessonId={lesson.id}
+                    starterCode={lesson.starterCode as { python?: string } | null}
+                    onChange={setPythonCode}
+                  />
+                </div>
+              ) : (
+                <BlocklyEditor
+                  ref={editorRef}
+                  lessonId={lesson.id}
+                  starterCode={lesson.starterCode}
+                  onXmlChange={setWorkspaceXml}
+                />
+              )}
             </div>
             {syncMessage ? (
               <p className="border-t border-cq-border px-4 py-2 text-xs text-cq-text-secondary">
@@ -382,30 +441,47 @@ export function LessonPlayerClient({
             ) : null}
           </div>
 
-          <PreviewPanel
-            lessonId={lesson.id}
-            lessonType={lesson.type}
-            lessonXp={lesson.xpReward}
-            content={lesson.content}
-            workspaceXml={workspaceXml}
-            generatedCode={generatedCode}
-            runSignal={runSignal}
-            onLessonComplete={handleLessonComplete}
-            onRuntimeError={setLastError}
-            onNextLesson={nextLessonId ? handleNextLesson : undefined}
-            shareEnabled={shareEnabled}
-          />
+          {isPhase2 ? (
+            <PythonPreviewPanel
+              lessonId={lesson.id}
+              lessonType={lesson.type}
+              lessonXp={lesson.xpReward}
+              content={lesson.content}
+              pythonCode={pythonCode}
+              runSignal={runSignal}
+              onLessonComplete={handleLessonComplete}
+              onRuntimeError={setLastError}
+              onNextLesson={nextLessonId ? handleNextLesson : undefined}
+            />
+          ) : (
+            <PreviewPanel
+              lessonId={lesson.id}
+              lessonType={lesson.type}
+              lessonXp={lesson.xpReward}
+              content={lesson.content}
+              workspaceXml={workspaceXml}
+              generatedCode={generatedCode}
+              runSignal={runSignal}
+              onLessonComplete={handleLessonComplete}
+              onRuntimeError={setLastError}
+              onNextLesson={nextLessonId ? handleNextLesson : undefined}
+              shareEnabled={shareEnabled}
+            />
+          )}
         </div>
       </div>
 
       <MobileSidebar
         lesson={lesson}
         progressDots={progressDots}
-        byteMessage={byteMessage}
-        byteLoading={byteLoading}
+        mentorMessage={mentorMessage}
+        mentorLoading={mentorLoading}
         gemCount={gemCount}
-        onAskByte={handleAskByte}
+        onAskMentor={handleAskMentor}
         onRun={handleRun}
+        mentorName={mentorName}
+        mentorInitials={mentorInitials}
+        accent={accent}
       />
     </div>
   );
@@ -414,19 +490,25 @@ export function LessonPlayerClient({
 function MobileSidebar({
   lesson,
   progressDots,
-  byteMessage,
-  byteLoading,
+  mentorMessage,
+  mentorLoading,
   gemCount,
-  onAskByte,
+  onAskMentor,
   onRun,
+  mentorName,
+  mentorInitials,
+  accent,
 }: {
   lesson: LessonPayload;
   progressDots: ProgressDot[];
-  byteMessage: string;
-  byteLoading: boolean;
+  mentorMessage: string;
+  mentorLoading: boolean;
   gemCount: number;
-  onAskByte: () => void;
+  onAskMentor: () => void;
   onRun: () => void;
+  mentorName: string;
+  mentorInitials: string;
+  accent: "cyan" | "violet";
 }) {
   const [open, setOpen] = useState(false);
 
@@ -467,11 +549,14 @@ function MobileSidebar({
           objective={lesson.content.objective ?? ""}
           currentLessonId={lesson.id}
           progressDots={progressDots}
-          byteMessage={byteMessage}
-          byteLoading={byteLoading}
+          mentorName={mentorName}
+          mentorInitials={mentorInitials}
+          mentorMessage={mentorMessage}
+          mentorLoading={mentorLoading}
           gems={gemCount}
-          onAskByte={onAskByte}
+          onAskMentor={onAskMentor}
           onRun={onRun}
+          accent={accent}
         />
       </aside>
     </>

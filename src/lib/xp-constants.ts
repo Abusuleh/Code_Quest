@@ -7,6 +7,9 @@ export const XP_TABLE = {
   PERFECT_SCORE: 75,
   BADGE_EARN: 50,
   PROJECT_PUBLISH: 300,
+  GUILD_BONUS: 0,
+  FORGE_TRIAL_WIN: 0,
+  BUILDER_BADGE: 0,
 } as const;
 
 export type XPEventType = keyof typeof XP_TABLE;

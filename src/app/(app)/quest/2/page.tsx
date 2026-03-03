@@ -47,8 +47,8 @@ function LockedModuleCard({ module }: { module: ModuleSummary }) {
           </p>
         </div>
         <div className="flex items-center gap-3 rounded-full border border-cq-border bg-cq-bg px-4 py-2 text-xs text-cq-text-secondary">
-          <span className="text-base text-cq-gold">LOCK</span>
-          <span>Locked for Free tier</span>
+          <span className="text-base text-cq-violet">LOCK</span>
+          <span>Champion plan required</span>
         </div>
       </div>
 
@@ -64,24 +64,22 @@ function LockedModuleCard({ module }: { module: ModuleSummary }) {
       </div>
 
       <div className="mt-6 rounded-2xl border border-cq-border bg-cq-bg-panel/60 p-6 text-sm text-cq-text-secondary">
-        <p className="text-sm text-white">
-          You&apos;ve mastered Module 1 - the adventure continues.
-        </p>
+        <p className="text-sm text-white">The Builder&apos;s Guild is an elite track.</p>
         <p className="mt-2 text-sm text-cq-text-secondary">
-          Unlock the Spark Zone to keep building, drawing, and creating new worlds with Byte.
+          Upgrade to Champion to unlock Nova, Python, and the Forge Trials.
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <Link
             href="/pricing?locked=true"
-            className="inline-flex items-center justify-center rounded-full border border-cq-cyan/60 px-5 py-2 text-xs uppercase tracking-[0.3em] text-cq-cyan"
+            className="inline-flex items-center justify-center rounded-full border border-cq-violet/60 px-5 py-2 text-xs uppercase tracking-[0.3em] text-cq-violet"
           >
-            Unlock this module
+            Upgrade to Champion
           </Link>
           <Link
             href="/quest/1"
             className="inline-flex items-center justify-center rounded-full border border-cq-border px-5 py-2 text-xs uppercase tracking-[0.3em] text-cq-text-secondary"
           >
-            Keep exploring Module 1
+            Return to Spark Zone
           </Link>
         </div>
       </div>
@@ -95,7 +93,7 @@ export default async function QuestPage() {
     ? await prisma.subscription.findUnique({ where: { userId: session.user.id } })
     : null;
   const phase = await prisma.phase.findUnique({
-    where: { number: 1 },
+    where: { number: 2 },
     select: {
       number: true,
       title: true,
@@ -154,11 +152,7 @@ export default async function QuestPage() {
     return (
       <section
         key={module.id}
-        className={`rounded-3xl border p-6 shadow-panel ${
-          unlocked
-            ? "border-cq-cyan/60 bg-gradient-to-br from-cq-bg-elevated to-cq-bg-panel"
-            : "border-cq-border bg-cq-bg-elevated/60"
-        }`}
+        className="rounded-3xl border border-cq-violet/50 bg-gradient-to-br from-cq-bg-elevated to-cq-bg-panel p-6 shadow-panel"
       >
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
@@ -187,7 +181,7 @@ export default async function QuestPage() {
               <Link
                 key={lesson.id}
                 href={`/learn/${lesson.id}`}
-                className="group rounded-2xl border border-cq-border bg-cq-bg-panel p-4 transition hover:border-cq-cyan/60 hover:shadow-glow-cyan"
+                className="group rounded-2xl border border-cq-border bg-cq-bg-panel p-4 transition hover:border-cq-violet/60 hover:shadow-glow-primary"
               >
                 <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
                   <span>{lesson.type}</span>
@@ -208,8 +202,8 @@ export default async function QuestPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-cq-bg px-6 py-12 text-cq-text-primary">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(0,212,255,0.2)_0,_transparent_50%)] opacity-60" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,_rgba(0,212,255,0.12)_1px,_transparent_1px)] bg-[length:22px_22px] opacity-30" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(176,107,255,0.25)_0,_transparent_55%)] opacity-60" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,_rgba(176,107,255,0.14)_1px,_transparent_1px)] bg-[length:24px_24px] opacity-30" />
 
       <div className="relative mx-auto max-w-6xl space-y-10">
         <header className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
@@ -225,14 +219,14 @@ export default async function QuestPage() {
             </p>
             <div className="mt-4 h-2 w-full max-w-sm overflow-hidden rounded-full bg-cq-bg-elevated">
               <div
-                className="h-full rounded-full bg-cq-cyan"
+                className="h-full rounded-full bg-cq-violet"
                 style={{ width: `${lessonCount ? (completedCount / lessonCount) * 100 : 0}%` }}
               />
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-cq-cyan/40 bg-cq-bg-panel text-sm font-display text-cq-cyan shadow-glow-cyan animate-bounce">
-              BT
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-cq-violet/40 bg-cq-bg-panel text-sm font-display text-cq-violet shadow-glow-primary animate-bounce">
+              NV
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">Mentor</p>
