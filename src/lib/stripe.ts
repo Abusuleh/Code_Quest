@@ -2,7 +2,6 @@ import Stripe from "stripe";
 
 export type StripePlan = "SPARK" | "FAMILY" | "CHAMPION";
 export type StripeBilling = "monthly" | "annual";
-export type SeatPlan = "FREE" | "SPARK" | "EXPLORER" | "ADVENTURER" | "FAMILY" | "CHAMPION";
 
 type StripeEnv = {
   secretKey: string;
@@ -75,9 +74,4 @@ export function resolvePlanFromPriceId(priceId: string): StripePlan | null {
   if (priceId === env.priceChampionMonthly || priceId === env.priceChampionAnnual)
     return "CHAMPION";
   return null;
-}
-
-export function seatsForPlan(plan: SeatPlan): number {
-  if (plan === "FAMILY" || plan === "CHAMPION") return 3;
-  return 1;
 }

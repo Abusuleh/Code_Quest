@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { computeGuildXpTotal } from "@/lib/guild-engine";
-import { seatsForPlan } from "@/lib/stripe";
+import { seatsForPlan } from "@/lib/guild-engine";
 import { canAccessLesson } from "@/lib/subscription-gate";
 
-const subscription = (plan: string, status: string = "ACTIVE") =>
-  ({ plan, status } as never);
+const subscription = (plan: string, status: string = "ACTIVE") => ({ plan, status }) as never;
 
 describe("guild engine helpers", () => {
   it("computes collective XP increment for a guild", () => {
