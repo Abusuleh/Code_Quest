@@ -77,9 +77,7 @@ export function WebPreviewPanel({
   publishEnabled,
 }: Props) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(
-    null,
-  );
+  const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [consoleLogs, setConsoleLogs] = useState<ConsoleEntry[]>([]);
   const [srcDoc, setSrcDoc] = useState("");
   const runIdRef = useRef(0);
@@ -94,9 +92,10 @@ export function WebPreviewPanel({
       if (typeof event.data !== "object" || !event.data) return;
       if (event.data.type === "console") {
         setConsoleLogs((prev) =>
-          [...prev, { id: `${Date.now()}-${Math.random()}`, message: String(event.data.message) }].slice(
-            -20,
-          ),
+          [
+            ...prev,
+            { id: `${Date.now()}-${Math.random()}`, message: String(event.data.message) },
+          ].slice(-20),
         );
       }
       if (event.data.type === "error") {

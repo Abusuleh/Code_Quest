@@ -87,8 +87,8 @@ export function ShowcasePageClient({
           <p className="text-xs uppercase tracking-[0.4em] text-cq-text-secondary">Showcase</p>
           <h1 className="text-4xl font-heading text-white">Forge Showcase</h1>
           <p className="text-sm text-cq-text-secondary">
-            Real web builds from the Forge. Inspect the source, learn the craft, and celebrate
-            what kids are making.
+            Real web builds from the Forge. Inspect the source, learn the craft, and celebrate what
+            kids are making.
           </p>
         </header>
 

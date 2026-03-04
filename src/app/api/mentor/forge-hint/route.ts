@@ -71,8 +71,7 @@ export async function POST(request: NextRequest) {
   const content = lesson.content as { objective?: string; hint?: string };
 
   const hintLevel = Math.min(Math.max(attemptNumber, 1), 3);
-  const codeSnapshot =
-    typeof childCode === "string" ? childCode : JSON.stringify(childCode ?? {});
+  const codeSnapshot = typeof childCode === "string" ? childCode : JSON.stringify(childCode ?? {});
   const lessonContext = `Lesson: ${lesson.title}. Objective: ${content.objective}. Opening hint: ${content.hint}. Child current code: ${codeSnapshot}. Error if any: ${errorMessage ?? "none"}`;
 
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });

@@ -29,7 +29,11 @@ export function LessonLockedView({
 
         <div
           className={`mt-6 rounded-2xl border bg-cq-bg-panel p-5 text-left ${
-            isPhase3 ? "border-cq-orange/40" : isPhase2 ? "border-cq-violet/40" : "border-cq-cyan/40"
+            isPhase3
+              ? "border-cq-orange/40"
+              : isPhase2
+                ? "border-cq-violet/40"
+                : "border-cq-cyan/40"
           }`}
         >
           <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">

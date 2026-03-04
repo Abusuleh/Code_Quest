@@ -55,9 +55,7 @@ export default async function ShowcaseDetailPage({ params }: { params: { slug: s
           ← Back to Showcase
         </Link>
         <header className="space-y-2">
-          <p className="text-xs uppercase tracking-[0.4em] text-cq-text-secondary">
-            Forge Build
-          </p>
+          <p className="text-xs uppercase tracking-[0.4em] text-cq-text-secondary">Forge Build</p>
           <h1 className="text-3xl font-heading text-white">{project.title}</h1>
           <p className="text-sm text-cq-text-secondary">
             {project.child.displayName ?? project.child.username ?? "Forge Builder"} ·{" "}

@@ -82,7 +82,7 @@ const lessons = [
     content: {
       type: "coding",
       objective: "Create a list and add a link.",
-      hint: "Use <ul> with <li>, and <a href=\"...\">.",
+      hint: 'Use <ul> with <li>, and <a href="...">.',
       successCondition: "hasHTML:<ul|hasHTML:<a",
     },
     starterCode: {
@@ -108,7 +108,7 @@ const lessons = [
     content: {
       type: "coding",
       objective: "Add an image with alt text.",
-      hint: "Use <img src=\"...\" alt=\"...\">.",
+      hint: 'Use <img src="..." alt="...">.',
       successCondition: "hasHTML:<img",
     },
     starterCode: {
@@ -204,7 +204,7 @@ const lessons = [
     content: {
       type: "challenge",
       objective: "Create a card layout using a div and class.",
-      hint: "Add class=\"card\" and style later.",
+      hint: 'Add class="card" and style later.',
       successCondition: "hasHTML:<div|hasHTML:class=",
     },
     starterCode: {
@@ -1048,7 +1048,7 @@ const lessons = [
     content: {
       type: "challenge",
       objective: "Add alt text to all images.",
-      hint: "Use alt=\"...\" for images.",
+      hint: 'Use alt="..." for images.',
       successCondition: "hasHTML:alt=",
     },
     starterCode: {
@@ -1186,25 +1186,25 @@ async function main() {
     },
   ];
 
-  for (const module of modules) {
+  for (const moduleEntry of modules) {
     await prisma.module.upsert({
-      where: { id: module.id },
+      where: { id: moduleEntry.id },
       update: {
-        title: module.title,
-        description: module.description,
-        order: module.order,
-        weeks: module.weeks,
-        skills: module.skills,
+        title: moduleEntry.title,
+        description: moduleEntry.description,
+        order: moduleEntry.order,
+        weeks: moduleEntry.weeks,
+        skills: moduleEntry.skills,
         phaseId: "phase-3",
       },
       create: {
-        id: module.id,
+        id: moduleEntry.id,
         phaseId: "phase-3",
-        order: module.order,
-        title: module.title,
-        description: module.description,
-        weeks: module.weeks,
-        skills: module.skills,
+        order: moduleEntry.order,
+        title: moduleEntry.title,
+        description: moduleEntry.description,
+        weeks: moduleEntry.weeks,
+        skills: moduleEntry.skills,
       },
     });
   }

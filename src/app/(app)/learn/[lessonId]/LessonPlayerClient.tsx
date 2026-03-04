@@ -177,8 +177,8 @@ export function LessonPlayerClient({
     const latestCode = isPhase3
       ? JSON.stringify(webEditorRef.current?.getValue() ?? webCode)
       : isPhase2
-        ? monacoRef.current?.getValue() ?? pythonCode
-        : editorRef.current?.getWorkspaceXml() ?? workspaceXml;
+        ? (monacoRef.current?.getValue() ?? pythonCode)
+        : (editorRef.current?.getWorkspaceXml() ?? workspaceXml);
 
     const awardId = `${Date.now()}-${Math.random()}`;
     setAwardQueue((prev) => [
@@ -216,19 +216,19 @@ export function LessonPlayerClient({
           return;
         }
         if (!res.ok) throw new Error("SYNC_FAILED");
-          const data = (await res.json()) as {
-            alreadyComplete?: boolean;
-            xpAwarded?: number;
-            xpTotal?: number;
-            leveledUp?: boolean;
-            newLevel?: number;
-            streakBonus?: number;
-            newAchievements?: AchievementItem[];
-            gems?: number;
-            sparkGraduation?: boolean;
-            builderGraduation?: boolean;
-            forgeGraduation?: boolean;
-          };
+        const data = (await res.json()) as {
+          alreadyComplete?: boolean;
+          xpAwarded?: number;
+          xpTotal?: number;
+          leveledUp?: boolean;
+          newLevel?: number;
+          streakBonus?: number;
+          newAchievements?: AchievementItem[];
+          gems?: number;
+          sparkGraduation?: boolean;
+          builderGraduation?: boolean;
+          forgeGraduation?: boolean;
+        };
 
         if (data.alreadyComplete) return;
 
@@ -247,17 +247,17 @@ export function LessonPlayerClient({
           setGemCount((prev) => prev + gemsAwarded);
         }
 
-          if (data.sparkGraduation) {
-            router.push("/graduation");
-            return;
-          }
-          if ((data as { builderGraduation?: boolean }).builderGraduation) {
-            router.push("/graduation/builders-guild");
-          }
-          if ((data as { forgeGraduation?: boolean }).forgeGraduation) {
-            router.push("/graduation/the-forge");
-          }
-        } catch {
+        if (data.sparkGraduation) {
+          router.push("/graduation");
+          return;
+        }
+        if ((data as { builderGraduation?: boolean }).builderGraduation) {
+          router.push("/graduation/builders-guild");
+        }
+        if ((data as { forgeGraduation?: boolean }).forgeGraduation) {
+          router.push("/graduation/the-forge");
+        }
+      } catch {
         if (attempt === 1) {
           await new Promise((resolve) => setTimeout(resolve, 800));
           await syncCompletion(2);
@@ -268,16 +268,7 @@ export function LessonPlayerClient({
     };
 
     void syncCompletion();
-  }, [
-    isPhase2,
-    isPhase3,
-    lesson.id,
-    lesson.xpReward,
-    pythonCode,
-    router,
-    webCode,
-    workspaceXml,
-  ]);
+  }, [isPhase2, isPhase3, lesson.id, lesson.xpReward, pythonCode, router, webCode, workspaceXml]);
 
   const handleAskMentor = useCallback(async () => {
     if (gemCount < 10 || mentorLoading) return;
@@ -288,17 +279,21 @@ export function LessonPlayerClient({
 
     try {
       const res = await fetch(
-        isPhase3 ? "/api/mentor/forge-hint" : isPhase2 ? "/api/mentor/nova-hint" : "/api/mentor/hint",
+        isPhase3
+          ? "/api/mentor/forge-hint"
+          : isPhase2
+            ? "/api/mentor/nova-hint"
+            : "/api/mentor/hint",
         {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          lessonId: lesson.id,
-          childCode: isPhase3 ? webCode : isPhase2 ? pythonCode : workspaceXml,
-          errorMessage: lastError,
-          attemptNumber: hintAttempts + 1,
-        }),
-      },
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId: lesson.id,
+            childCode: isPhase3 ? webCode : isPhase2 ? pythonCode : workspaceXml,
+            errorMessage: lastError,
+            attemptNumber: hintAttempts + 1,
+          }),
+        },
       );
 
       if (res.status === 409) {
@@ -480,18 +475,16 @@ export function LessonPlayerClient({
                 Lesson
               </button>
             </div>
-            <div
-              className={
-                isPhase2 || isPhase3 ? "flex-1 space-y-4 p-4 lg:p-6" : "flex-1"
-              }
-            >
+            <div className={isPhase2 || isPhase3 ? "flex-1 space-y-4 p-4 lg:p-6" : "flex-1"}>
               {isPhase2 && isBridgeLesson ? <BridgeView lessonId={lesson.id} /> : null}
               {isPhase3 ? (
                 <div className="min-h-[360px] flex-1 overflow-hidden rounded-2xl border border-cq-border bg-cq-bg-panel">
                   <WebEditor
                     ref={webEditorRef}
                     lessonId={lesson.id}
-                    starterCode={lesson.starterCode as { html?: string; css?: string; js?: string } | null}
+                    starterCode={
+                      lesson.starterCode as { html?: string; css?: string; js?: string } | null
+                    }
                     onChange={setWebCode}
                   />
                 </div>

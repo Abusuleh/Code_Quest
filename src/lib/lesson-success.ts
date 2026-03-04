@@ -62,12 +62,7 @@ export function checkPythonSuccess(code: string, condition: string): boolean {
  *
  * An empty condition string means no requirement - returns true.
  */
-export function checkWebSuccess(
-  html: string,
-  css: string,
-  js: string,
-  condition: string,
-): boolean {
+export function checkWebSuccess(html: string, css: string, js: string, condition: string): boolean {
   if (!condition || condition.trim() === "") return true;
 
   const checks = condition.split("|");

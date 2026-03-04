@@ -19,8 +19,7 @@ export function ForgeGraduationClient({
   const [typedMessage, setTypedMessage] = useState("");
   const [xpCount, setXpCount] = useState(0);
 
-  const message =
-    "You forged it. Fifty web builds. You are officially... a Forge Flame Master.";
+  const message = "You forged it. Fifty web builds. You are officially... a Forge Flame Master.";
 
   useEffect(() => {
     const timers = [
@@ -102,9 +101,7 @@ export function ForgeGraduationClient({
           FG
         </motion.div>
 
-        <p className="mt-6 text-xs uppercase tracking-[0.4em] text-cq-text-secondary">
-          The Forge
-        </p>
+        <p className="mt-6 text-xs uppercase tracking-[0.4em] text-cq-text-secondary">The Forge</p>
         <h1 className="mt-2 text-3xl font-heading text-white">{childName}&apos;s Flame</h1>
 
         {showMessage ? (

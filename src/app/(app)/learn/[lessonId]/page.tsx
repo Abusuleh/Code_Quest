@@ -120,10 +120,14 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
 
   const content = lesson.content as LessonContent;
   const starterCode =
-    (lesson.starterCode as { xml?: string; python?: string; html?: string; css?: string; js?: string } | null) ??
-    null;
-  const solutionCode =
-    (lesson.solutionCode as { xml?: string; python?: string } | null) ?? null;
+    (lesson.starterCode as {
+      xml?: string;
+      python?: string;
+      html?: string;
+      css?: string;
+      js?: string;
+    } | null) ?? null;
+  const solutionCode = (lesson.solutionCode as { xml?: string; python?: string } | null) ?? null;
 
   return (
     <LessonPlayerClient
