@@ -52,6 +52,12 @@ svg {
   rotate: var(--particle-angle);
 }
 
+.animate-ember {
+  animation-name: emberRise;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+}
+
 @keyframes xpGlow {
   0% {
     transform: scale(0.9);
@@ -81,6 +87,20 @@ svg {
   }
 }
 
+@keyframes emberRise {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-220px) scale(0.2);
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .particle-burst {
     animation: none;
@@ -88,5 +108,9 @@ svg {
   }
   .xp-glow {
     animation: none;
+  }
+  .animate-ember {
+    animation: none;
+    opacity: 0;
   }
 }

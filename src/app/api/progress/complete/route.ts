@@ -4,7 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { awardXP } from "@/lib/xp-engine";
-import { checkSuccessCondition, checkPythonSuccess } from "@/lib/lesson-success";
+import { checkSuccessCondition, checkPythonSuccess, checkWebSuccess } from "@/lib/lesson-success";
 import { render } from "@react-email/render";
 import { getResend } from "@/lib/resend";
 import { SparkGraduationEmail } from "@/emails/SparkGraduationEmail";
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
 
   const payload = await request.json().catch(() => null);
   const lessonId = payload?.lessonId as string | undefined;
-  const code = payload?.code as string | undefined;
+  const code = payload?.code as string | { html?: string; css?: string; js?: string } | undefined;
   const score = payload?.score as number | undefined;
 
   if (!lessonId || !code) {
@@ -53,9 +53,29 @@ export async function POST(request: NextRequest) {
   const content = lesson.content as { successCondition?: string };
   const successCondition = content?.successCondition ?? "";
   const isPhase2 = lesson.module.phase.number === 2;
-  const success = isPhase2
-    ? checkPythonSuccess(code, successCondition)
-    : checkSuccessCondition(code, successCondition);
+  const isPhase3 = lesson.module.phase.number === 3;
+  const codeString = typeof code === "string" ? code : JSON.stringify(code);
+  const parsedWebCode =
+    typeof code === "string"
+      ? (() => {
+          try {
+            return JSON.parse(code) as { html?: string; css?: string; js?: string };
+          } catch {
+            return { html: "", css: "", js: "" };
+          }
+        })()
+      : code;
+
+  const success = isPhase3
+    ? checkWebSuccess(
+        String(parsedWebCode?.html ?? ""),
+        String(parsedWebCode?.css ?? ""),
+        String(parsedWebCode?.js ?? ""),
+        successCondition,
+      )
+    : isPhase2
+      ? checkPythonSuccess(codeString, successCondition)
+      : checkSuccessCondition(codeString, successCondition);
   if (!success) {
     return NextResponse.json({ error: "CONDITION_NOT_MET" }, { status: 400 });
   }
@@ -109,7 +129,7 @@ export async function POST(request: NextRequest) {
     update: {
       status: isPerfect ? "MASTERED" : "COMPLETED",
       score: score ?? null,
-      code,
+      code: codeString,
       completedAt: new Date(),
       attempts: { increment: 1 },
       xpEarned: xpResult.xpAwarded + (bonusResult?.xpAwarded ?? 0),
@@ -119,7 +139,7 @@ export async function POST(request: NextRequest) {
       lessonId,
       status: isPerfect ? "MASTERED" : "COMPLETED",
       score: score ?? null,
-      code,
+      code: codeString,
       completedAt: new Date(),
       attempts: 1,
       xpEarned: xpResult.xpAwarded + (bonusResult?.xpAwarded ?? 0),
@@ -136,6 +156,7 @@ export async function POST(request: NextRequest) {
 
   let sparkGraduation = false;
   let builderGraduation = false;
+  let forgeGraduation = false;
   let sparkAchievement: {
     id: string;
     title: string;
@@ -144,6 +165,13 @@ export async function POST(request: NextRequest) {
     gemReward: number;
   } | null = null;
   let builderAchievement: {
+    id: string;
+    title: string;
+    rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
+    xpReward: number;
+    gemReward: number;
+  } | null = null;
+  let forgeAchievement: {
     id: string;
     title: string;
     rarity: "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
@@ -250,6 +278,46 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  const forgeCompletedCount = await prisma.progress.count({
+    where: {
+      childId: session.activeChildId,
+      status: { in: ["COMPLETED", "MASTERED"] },
+      lesson: { module: { phase: { number: 3 } } },
+    },
+  });
+
+  if (forgeCompletedCount >= 50) {
+    const forge = await prisma.achievement.findUnique({
+      where: { key: "FORGE_BADGE" },
+      select: { id: true, title: true, rarity: true, xpReward: true, gemReward: true },
+    });
+    if (forge) {
+      const existingForge = await prisma.childAchievement.findUnique({
+        where: {
+          childId_achievementId: {
+            childId: session.activeChildId,
+            achievementId: forge.id,
+          },
+        },
+      });
+
+      if (!existingForge) {
+        await prisma.childAchievement.create({
+          data: { childId: session.activeChildId, achievementId: forge.id },
+        });
+        await awardXP(session.activeChildId, "FORGE_BADGE", {
+          achievementKey: "FORGE_BADGE",
+        });
+        await prisma.child.update({
+          where: { id: session.activeChildId },
+          data: { currentPhase: 4 },
+        });
+        forgeAchievement = forge;
+        forgeGraduation = true;
+      }
+    }
+  }
+
   const finalResult = bonusResult ?? xpResult;
   const updatedChild = await prisma.child.findUnique({
     where: { id: session.activeChildId },
@@ -259,6 +327,7 @@ export async function POST(request: NextRequest) {
   const extraAchievements = [
     ...(sparkAchievement ? [sparkAchievement] : []),
     ...(builderAchievement ? [builderAchievement] : []),
+    ...(forgeAchievement ? [forgeAchievement] : []),
   ];
 
   return NextResponse.json({
@@ -274,5 +343,6 @@ export async function POST(request: NextRequest) {
     gems: lesson.gemReward,
     sparkGraduation,
     builderGraduation,
+    forgeGraduation,
   });
 }

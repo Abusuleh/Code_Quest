@@ -123,9 +123,11 @@ export default async function ChildDashboardPage() {
   const hasLessons = lessonCount > 0;
   const continueHref = nextLesson
     ? `/learn/${nextLesson.id}`
-    : child.currentPhase >= 2
-      ? "/quest/2"
-      : "/quest/1";
+    : child.currentPhase >= 3
+      ? "/quest/3"
+      : child.currentPhase >= 2
+        ? "/quest/2"
+        : "/quest/1";
 
   const fallback = kingdomFallback[child.currentPhase] ?? kingdomFallback[1];
   const kingdomName = phase?.kingdom ?? fallback.kingdom;

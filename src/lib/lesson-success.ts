@@ -48,3 +48,36 @@ export function checkPythonSuccess(code: string, condition: string): boolean {
     return false;
   });
 }
+
+/**
+ * Checks whether HTML/CSS/JS code satisfies a lesson's success condition.
+ *
+ * successCondition format: pipe-separated checks, e.g.
+ * "hasHTML:<div|hasCSS:color|hasJS:querySelector"
+ *
+ * Supported check types:
+ *   hasHTML:<snippet> - HTML must include the snippet
+ *   hasCSS:<snippet>  - CSS must include the snippet
+ *   hasJS:<snippet>   - JS must include the snippet
+ *
+ * An empty condition string means no requirement - returns true.
+ */
+export function checkWebSuccess(html: string, css: string, js: string, condition: string): boolean {
+  if (!condition || condition.trim() === "") return true;
+
+  const checks = condition.split("|");
+
+  return checks.every((check) => {
+    const [type, value] = check.split(":");
+    if (type === "hasHTML") {
+      return html.includes(value);
+    }
+    if (type === "hasCSS") {
+      return css.includes(value);
+    }
+    if (type === "hasJS") {
+      return js.includes(value);
+    }
+    return false;
+  });
+}

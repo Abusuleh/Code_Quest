@@ -14,17 +14,21 @@ const baseLinks = [
   { href: "/dashboard", label: "Child Dashboard" },
   { href: "/quest/1", label: "Quest" },
   { href: "/quest/2", label: "Builder's Guild", requiresPhase2: true },
+  { href: "/quest/3", label: "The Forge", requiresPhase3: true },
   { href: "/guild", label: "Guild", requiresPhase2: true },
   { href: "/forge-trial", label: "Forge Trial", requiresPhase2: true },
   { href: "/placement", label: "Placement" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/showcase", label: "Showcase", requiresPhase3: true },
 ];
 
 export function AppNav({ parentName, role, childPhase }: Props) {
   const pathname = usePathname();
-  const links = baseLinks.filter(
-    (link) => !("requiresPhase2" in link) || (childPhase ?? 0) >= 2,
-  );
+  const links = baseLinks.filter((link) => {
+    if ("requiresPhase3" in link) return (childPhase ?? 0) >= 3;
+    if ("requiresPhase2" in link) return (childPhase ?? 0) >= 2;
+    return true;
+  });
   const finalLinks =
     role === "ADMIN" ? [...links, { href: "/parent/admin", label: "Admin" }] : links;
 

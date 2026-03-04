@@ -69,7 +69,13 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
         objective={(lesson.content as LessonContent).objective ?? ""}
         lessonId={lesson.id}
         phaseNumber={lesson.module.phase.number}
-        mentorName={lesson.module.phase.number === 2 ? "Nova" : "Byte"}
+        mentorName={
+          lesson.module.phase.number === 3
+            ? "Forge"
+            : lesson.module.phase.number === 2
+              ? "Nova"
+              : "Byte"
+        }
       />
     );
   }
@@ -114,9 +120,14 @@ export default async function LessonPlayerPage({ params }: { params: { lessonId:
 
   const content = lesson.content as LessonContent;
   const starterCode =
-    (lesson.starterCode as { xml?: string; python?: string } | null) ?? null;
-  const solutionCode =
-    (lesson.solutionCode as { xml?: string; python?: string } | null) ?? null;
+    (lesson.starterCode as {
+      xml?: string;
+      python?: string;
+      html?: string;
+      css?: string;
+      js?: string;
+    } | null) ?? null;
+  const solutionCode = (lesson.solutionCode as { xml?: string; python?: string } | null) ?? null;
 
   return (
     <LessonPlayerClient
