@@ -129,6 +129,15 @@ const achievements = [
     gemReward: 75,
     rarity: "LEGENDARY",
   },
+  {
+    key: "FORGE_BADGE",
+    title: "Forge Flame Master",
+    description: "Complete every lesson in Phase 3 and earn the Forge Flame.",
+    iconUrl: "/achievements/forge-badge.png",
+    xpReward: 400,
+    gemReward: 100,
+    rarity: "LEGENDARY",
+  },
 ];
 
 async function main() {

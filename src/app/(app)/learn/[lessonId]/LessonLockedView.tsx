@@ -17,6 +17,7 @@ export function LessonLockedView({
   phaseNumber = 1,
   mentorName = "Byte",
 }: Props) {
+  const isPhase3 = phaseNumber >= 3;
   const isPhase2 = phaseNumber >= 2;
 
   return (
@@ -28,7 +29,7 @@ export function LessonLockedView({
 
         <div
           className={`mt-6 rounded-2xl border bg-cq-bg-panel p-5 text-left ${
-            isPhase2 ? "border-cq-violet/40" : "border-cq-cyan/40"
+            isPhase3 ? "border-cq-orange/40" : isPhase2 ? "border-cq-violet/40" : "border-cq-cyan/40"
           }`}
         >
           <p className="text-xs uppercase tracking-[0.3em] text-cq-text-secondary">
@@ -38,9 +39,11 @@ export function LessonLockedView({
             {objective || `${mentorName} has a brilliant new quest waiting for you!`}
           </p>
           <p className="mt-3 text-sm text-cq-text-secondary">
-            {isPhase2
-              ? "The Builder's Guild requires Champion access."
-              : "You've mastered Module 1 - the adventure continues with Spark."}
+            {isPhase3
+              ? "The Forge opens for Champion members only."
+              : isPhase2
+                ? "The Builder's Guild requires Champion access."
+                : "You've mastered Module 1 - the adventure continues with Spark."}
           </p>
           <p className="mt-3 text-sm text-cq-text-secondary">
             {mentorName} says: &quot;I can&apos;t wait to teach you this one!&quot;
@@ -51,18 +54,20 @@ export function LessonLockedView({
           <Link
             href={`/pricing?locked=true&lesson=${encodeURIComponent(lessonId)}`}
             className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold ${
-              isPhase2
-                ? "bg-cq-violet text-white shadow-glow-primary"
-                : "bg-cq-cyan text-black shadow-glow-cyan"
+              isPhase3
+                ? "bg-cq-orange text-black shadow-glow-gold"
+                : isPhase2
+                  ? "bg-cq-violet text-white shadow-glow-primary"
+                  : "bg-cq-cyan text-black shadow-glow-cyan"
             }`}
           >
             Unlock this lesson
           </Link>
           <Link
-            href="/quest/1"
+            href={isPhase3 ? "/quest/3" : isPhase2 ? "/quest/2" : "/quest/1"}
             className="inline-flex items-center justify-center rounded-full border border-cq-border px-6 py-3 text-sm text-white"
           >
-            Go back to Module 1
+            Go back to your quest
           </Link>
         </div>
       </div>

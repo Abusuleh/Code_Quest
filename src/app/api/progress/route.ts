@@ -20,11 +20,12 @@ export async function PATCH(request: NextRequest) {
 
   const payload = await request.json().catch(() => null);
   const lessonId = payload?.lessonId as string | undefined;
-  const code = payload?.code as string | undefined;
+  const code = payload?.code as string | { html?: string; css?: string; js?: string } | undefined;
 
   if (!lessonId || !code) {
     return NextResponse.json({ error: "INVALID_PAYLOAD" }, { status: 400 });
   }
+  const codeString = typeof code === "string" ? code : JSON.stringify(code);
 
   const existing = await prisma.progress.findUnique({
     where: {
@@ -49,14 +50,14 @@ export async function PATCH(request: NextRequest) {
     },
     update: {
       status: "IN_PROGRESS",
-      code,
+      code: codeString,
       attempts: { increment: 1 },
     },
     create: {
       childId: session.activeChildId,
       lessonId,
       status: "IN_PROGRESS",
-      code,
+      code: codeString,
       attempts: 1,
     },
   });

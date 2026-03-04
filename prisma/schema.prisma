@@ -57,6 +57,7 @@ model Child {
   guildId       String?
   guild         Guild?    @relation(fields: [guildId], references: [id])
   forgeEntries  ForgeTrialEntry[]
+  tournamentEntries TournamentEntry[]
   progress      Progress[]
   placementResults PlacementResult[]
   achievements  ChildAchievement[]
@@ -228,6 +229,32 @@ model ForgeTrialEntry {
   @@index([trialId, score])
 }
 
+model Tournament {
+  id          String           @id @default(cuid())
+  title       String
+  description String
+  startsAt    DateTime
+  endsAt      DateTime
+  isActive    Boolean          @default(false)
+  entries     TournamentEntry[]
+  createdAt   DateTime         @default(now())
+}
+
+model TournamentEntry {
+  id           String      @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  projectId    String
+  project      Project    @relation(fields: [projectId], references: [id])
+  childId      String
+  child        Child      @relation(fields: [childId], references: [id])
+  score        Int         @default(0)
+  createdAt    DateTime    @default(now())
+
+  @@unique([tournamentId, projectId])
+  @@index([tournamentId, score])
+}
+
 // -- PROJECTS ------------------------------------------
 model Project {
   id          String       @id @default(cuid())
@@ -247,6 +274,7 @@ model Project {
   publishedAt DateTime?
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  tournamentEntries TournamentEntry[]
 }
 
 // -- SUBSCRIPTIONS -------------------------------------
@@ -380,6 +408,8 @@ enum XPEventType {
   GUILD_BONUS
   FORGE_TRIAL_WIN
   BUILDER_BADGE
+  FORGE_BADGE
+  TOURNAMENT_ENTRY
 }
 
 enum AchievementRarity {

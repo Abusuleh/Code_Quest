@@ -5,7 +5,7 @@ export function canAccessLesson(
   moduleOrder: number,
   phaseNumber = 1,
 ): boolean {
-  if (phaseNumber === 2) {
+  if (phaseNumber === 2 || phaseNumber === 3) {
     if (!subscription) return false;
     if (subscription.plan !== "CHAMPION") return false;
     if (subscription.status === "CANCELLED" || subscription.status === "PAST_DUE") return false;

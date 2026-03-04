@@ -10,6 +10,8 @@ export const XP_TABLE = {
   GUILD_BONUS: 0,
   FORGE_TRIAL_WIN: 0,
   BUILDER_BADGE: 0,
+  FORGE_BADGE: 0,
+  TOURNAMENT_ENTRY: 0,
 } as const;
 
 export type XPEventType = keyof typeof XP_TABLE;

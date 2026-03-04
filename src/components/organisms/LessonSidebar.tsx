@@ -22,7 +22,7 @@ type Props = {
   gems: number;
   onAskMentor: () => void;
   onRun: () => void;
-  accent?: "cyan" | "violet";
+  accent?: "cyan" | "violet" | "orange";
 };
 
 const statusStyles: Record<ProgressDot["status"], string> = {
@@ -63,17 +63,29 @@ export function LessonSidebar({
           dots: "bg-cq-violet",
           ring: "ring-cq-violet",
         }
-      : {
-          badge: "border-cq-cyan/50 bg-cq-bg-overlay text-cq-cyan",
-          objective: "border-l-cq-cyan",
-          bubble: "border-cq-cyan/30",
-          mentorAvatar: "border-cq-cyan/40 text-cq-cyan",
-          askBadge: "text-cq-cyan",
-          runButton: "bg-cq-cyan text-black shadow-glow-cyan",
-          runHover: "hover:shadow-[0_0_24px_rgba(0,212,255,0.6)]",
-          dots: "bg-cq-cyan",
-          ring: "ring-cq-cyan",
-        };
+      : accent === "orange"
+        ? {
+            badge: "border-cq-orange/50 bg-cq-bg-overlay text-cq-orange",
+            objective: "border-l-cq-orange",
+            bubble: "border-cq-orange/30",
+            mentorAvatar: "border-cq-orange/40 text-cq-orange",
+            askBadge: "text-cq-orange",
+            runButton: "bg-cq-orange text-black shadow-glow-gold",
+            runHover: "hover:shadow-glow-gold",
+            dots: "bg-cq-orange",
+            ring: "ring-cq-orange",
+          }
+        : {
+            badge: "border-cq-cyan/50 bg-cq-bg-overlay text-cq-cyan",
+            objective: "border-l-cq-cyan",
+            bubble: "border-cq-cyan/30",
+            mentorAvatar: "border-cq-cyan/40 text-cq-cyan",
+            askBadge: "text-cq-cyan",
+            runButton: "bg-cq-cyan text-black shadow-glow-cyan",
+            runHover: "hover:shadow-[0_0_24px_rgba(0,212,255,0.6)]",
+            dots: "bg-cq-cyan",
+            ring: "ring-cq-cyan",
+          };
 
   return (
     <aside className="flex h-full w-[280px] flex-col border-r border-cq-border bg-cq-bg-elevated px-6 py-6">

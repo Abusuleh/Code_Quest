@@ -43,4 +43,23 @@ describe("canAccessLesson", () => {
     const sub = { ...baseSubscription, plan: "CHAMPION", status: "ACTIVE" } as Subscription;
     expect(canAccessLesson(sub, 5, 1)).toBe(true);
   });
+
+  it("returns false for phase 3 with no subscription", () => {
+    expect(canAccessLesson(null, 1, 3)).toBe(false);
+  });
+
+  it("returns false for phase 3 with SPARK plan", () => {
+    const sub = { ...baseSubscription, plan: "SPARK", status: "ACTIVE" } as Subscription;
+    expect(canAccessLesson(sub, 1, 3)).toBe(false);
+  });
+
+  it("returns false for phase 3 with CHAMPION plan but status=PAST_DUE", () => {
+    const sub = { ...baseSubscription, plan: "CHAMPION", status: "PAST_DUE" } as Subscription;
+    expect(canAccessLesson(sub, 1, 3)).toBe(false);
+  });
+
+  it("returns true for phase 3 with CHAMPION plan, status=ACTIVE", () => {
+    const sub = { ...baseSubscription, plan: "CHAMPION", status: "ACTIVE" } as Subscription;
+    expect(canAccessLesson(sub, 1, 3)).toBe(true);
+  });
 });

@@ -5,8 +5,10 @@ import { useRouter } from "next/navigation";
 import { LessonSidebar } from "@/components/organisms/LessonSidebar";
 import { BlocklyEditor, type BlocklyEditorHandle } from "@/components/organisms/BlocklyEditor";
 import { MonacoEditor, type MonacoEditorHandle } from "@/components/organisms/MonacoEditor";
+import { WebEditor, type WebEditorHandle } from "@/components/organisms/WebEditor";
 import { PreviewPanel } from "@/components/organisms/PreviewPanel";
 import { PythonPreviewPanel } from "@/components/organisms/PythonPreviewPanel";
+import { WebPreviewPanel } from "@/components/organisms/WebPreviewPanel";
 import { BridgeView } from "@/components/organisms/BridgeView";
 import { AchievementToast } from "@/components/molecules/AchievementToast";
 import { XPAwardOverlay } from "@/components/organisms/XPAwardOverlay";
@@ -29,7 +31,7 @@ type LessonPayload = {
   gemReward: number;
   estimatedMin: number;
   order: number;
-  starterCode: { xml?: string; python?: string } | null;
+  starterCode: { xml?: string; python?: string; html?: string; css?: string; js?: string } | null;
   solutionCode: { python?: string } | null;
   module: {
     title: string;
@@ -93,9 +95,11 @@ export function LessonPlayerClient({
   const router = useRouter();
   const editorRef = useRef<BlocklyEditorHandle | null>(null);
   const monacoRef = useRef<MonacoEditorHandle | null>(null);
+  const webEditorRef = useRef<WebEditorHandle | null>(null);
   const [workspaceXml, setWorkspaceXml] = useState("");
   const [generatedCode, setGeneratedCode] = useState("");
   const [pythonCode, setPythonCode] = useState("");
+  const [webCode, setWebCode] = useState({ html: "", css: "", js: "" });
   const [runSignal, setRunSignal] = useState(0);
   const [mentorMessage, setMentorMessage] = useState(lesson.content.hint ?? "");
   const [mentorLoading, setMentorLoading] = useState(false);
@@ -111,13 +115,15 @@ export function LessonPlayerClient({
   const [hintAttempts, setHintAttempts] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
+  const [publishing, setPublishing] = useState(false);
   const [sessionDisplaced, setSessionDisplaced] = useState(false);
   const completedRef = useRef(false);
   const isPhase2 = lesson.module.phase.number === 2;
+  const isPhase3 = lesson.module.phase.number === 3;
   const isBridgeLesson = isPhase2 && lesson.module.order === 1;
-  const mentorName = isPhase2 ? "Nova" : "Byte";
-  const mentorInitials = isPhase2 ? "NV" : "BT";
-  const accent = isPhase2 ? "violet" : "cyan";
+  const mentorName = isPhase3 ? "Forge" : isPhase2 ? "Nova" : "Byte";
+  const mentorInitials = isPhase3 ? "FG" : isPhase2 ? "NV" : "BT";
+  const accent = isPhase3 ? "orange" : isPhase2 ? "violet" : "cyan";
 
   useEffect(() => {
     completedRef.current = false;
@@ -130,7 +136,11 @@ export function LessonPlayerClient({
 
   const handleRun = useCallback(() => {
     let codeToSync = "";
-    if (isPhase2) {
+    if (isPhase3) {
+      const value = webEditorRef.current?.getValue() ?? webCode;
+      setWebCode(value);
+      codeToSync = JSON.stringify(value);
+    } else if (isPhase2) {
       const code = monacoRef.current?.getValue() ?? pythonCode;
       setPythonCode(code);
       codeToSync = code;
@@ -159,14 +169,16 @@ export function LessonPlayerClient({
         }
       })
       .catch(() => null);
-  }, [isPhase2, lesson.id, pythonCode]);
+  }, [isPhase2, isPhase3, lesson.id, pythonCode, webCode]);
 
   const handleLessonComplete = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
-    const latestCode = isPhase2
-      ? monacoRef.current?.getValue() ?? pythonCode
-      : editorRef.current?.getWorkspaceXml() ?? workspaceXml;
+    const latestCode = isPhase3
+      ? JSON.stringify(webEditorRef.current?.getValue() ?? webCode)
+      : isPhase2
+        ? monacoRef.current?.getValue() ?? pythonCode
+        : editorRef.current?.getWorkspaceXml() ?? workspaceXml;
 
     const awardId = `${Date.now()}-${Math.random()}`;
     setAwardQueue((prev) => [
@@ -185,7 +197,11 @@ export function LessonPlayerClient({
     setShareEnabled(true);
     setMentorMessage(
       celebrationMessages[lesson.id] ??
-        (isPhase2 ? "Excellent build, engineer. Want to push it further?" : "Great work, coder!"),
+        (isPhase3
+          ? "Clean structure, strong foundation. What will you refine next?"
+          : isPhase2
+            ? "Excellent build, engineer. Want to push it further?"
+            : "Great work, coder!"),
     );
 
     const syncCompletion = async (attempt = 1) => {
@@ -211,6 +227,7 @@ export function LessonPlayerClient({
             gems?: number;
             sparkGraduation?: boolean;
             builderGraduation?: boolean;
+            forgeGraduation?: boolean;
           };
 
         if (data.alreadyComplete) return;
@@ -237,6 +254,9 @@ export function LessonPlayerClient({
           if ((data as { builderGraduation?: boolean }).builderGraduation) {
             router.push("/graduation/builders-guild");
           }
+          if ((data as { forgeGraduation?: boolean }).forgeGraduation) {
+            router.push("/graduation/the-forge");
+          }
         } catch {
         if (attempt === 1) {
           await new Promise((resolve) => setTimeout(resolve, 800));
@@ -248,7 +268,16 @@ export function LessonPlayerClient({
     };
 
     void syncCompletion();
-  }, [isPhase2, lesson.id, lesson.xpReward, pythonCode, router, workspaceXml]);
+  }, [
+    isPhase2,
+    isPhase3,
+    lesson.id,
+    lesson.xpReward,
+    pythonCode,
+    router,
+    webCode,
+    workspaceXml,
+  ]);
 
   const handleAskMentor = useCallback(async () => {
     if (gemCount < 10 || mentorLoading) return;
@@ -258,16 +287,19 @@ export function LessonPlayerClient({
     setSyncMessage(null);
 
     try {
-      const res = await fetch(isPhase2 ? "/api/mentor/nova-hint" : "/api/mentor/hint", {
+      const res = await fetch(
+        isPhase3 ? "/api/mentor/forge-hint" : isPhase2 ? "/api/mentor/nova-hint" : "/api/mentor/hint",
+        {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           lessonId: lesson.id,
-          childCode: isPhase2 ? pythonCode : workspaceXml,
+          childCode: isPhase3 ? webCode : isPhase2 ? pythonCode : workspaceXml,
           errorMessage: lastError,
           attemptNumber: hintAttempts + 1,
         }),
-      });
+      },
+      );
 
       if (res.status === 409) {
         setSessionDisplaced(true);
@@ -309,21 +341,55 @@ export function LessonPlayerClient({
     gemCount,
     hintAttempts,
     isPhase2,
+    isPhase3,
     lastError,
     lesson.id,
     mentorLoading,
     mentorName,
     pythonCode,
+    webCode,
     workspaceXml,
   ]);
+
+  const handlePublish = useCallback(async () => {
+    if (publishing || !isPhase3) return;
+    setPublishing(true);
+    setSyncMessage(null);
+    try {
+      const payload = webEditorRef.current?.getValue() ?? webCode;
+      const res = await fetch("/api/showcase/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          lessonId: lesson.id,
+          html: payload.html,
+          css: payload.css,
+          js: payload.js,
+        }),
+      });
+      if (res.status === 409) {
+        setSessionDisplaced(true);
+        return;
+      }
+      if (!res.ok) throw new Error("PUBLISH_FAILED");
+      const data = (await res.json()) as { slug?: string };
+      if (data.slug) {
+        router.push(`/showcase/${data.slug}`);
+      }
+    } catch {
+      setSyncMessage("Publish failed. Try again in a moment.");
+    } finally {
+      setPublishing(false);
+    }
+  }, [isPhase3, lesson.id, publishing, router, webCode]);
 
   const handleNextLesson = useCallback(() => {
     if (nextLessonId) {
       router.push(`/learn/${nextLessonId}`);
       return;
     }
-    router.push(isPhase2 ? "/quest/2" : "/quest/1");
-  }, [isPhase2, nextLessonId, router]);
+    router.push(isPhase3 ? "/quest/3" : isPhase2 ? "/quest/2" : "/quest/1");
+  }, [isPhase2, isPhase3, nextLessonId, router]);
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
@@ -414,9 +480,22 @@ export function LessonPlayerClient({
                 Lesson
               </button>
             </div>
-            <div className={isPhase2 ? "flex-1 space-y-4 p-4 lg:p-6" : "flex-1"}>
+            <div
+              className={
+                isPhase2 || isPhase3 ? "flex-1 space-y-4 p-4 lg:p-6" : "flex-1"
+              }
+            >
               {isPhase2 && isBridgeLesson ? <BridgeView lessonId={lesson.id} /> : null}
-              {isPhase2 ? (
+              {isPhase3 ? (
+                <div className="min-h-[360px] flex-1 overflow-hidden rounded-2xl border border-cq-border bg-cq-bg-panel">
+                  <WebEditor
+                    ref={webEditorRef}
+                    lessonId={lesson.id}
+                    starterCode={lesson.starterCode as { html?: string; css?: string; js?: string } | null}
+                    onChange={setWebCode}
+                  />
+                </div>
+              ) : isPhase2 ? (
                 <div className="min-h-[360px] flex-1 overflow-hidden rounded-2xl border border-cq-border bg-cq-bg-panel">
                   <MonacoEditor
                     ref={monacoRef}
@@ -441,7 +520,23 @@ export function LessonPlayerClient({
             ) : null}
           </div>
 
-          {isPhase2 ? (
+          {isPhase3 ? (
+            <WebPreviewPanel
+              lessonId={lesson.id}
+              lessonType={lesson.type}
+              lessonXp={lesson.xpReward}
+              content={lesson.content}
+              html={webCode.html}
+              css={webCode.css}
+              js={webCode.js}
+              runSignal={runSignal}
+              onLessonComplete={handleLessonComplete}
+              onRuntimeError={setLastError}
+              onNextLesson={nextLessonId ? handleNextLesson : undefined}
+              onPublish={handlePublish}
+              publishEnabled={shareEnabled && !publishing}
+            />
+          ) : isPhase2 ? (
             <PythonPreviewPanel
               lessonId={lesson.id}
               lessonType={lesson.type}
@@ -508,7 +603,7 @@ function MobileSidebar({
   onRun: () => void;
   mentorName: string;
   mentorInitials: string;
-  accent: "cyan" | "violet";
+  accent: "cyan" | "violet" | "orange";
 }) {
   const [open, setOpen] = useState(false);
 

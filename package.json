@@ -16,6 +16,7 @@
     "seed": "ts-node prisma/seed/achievements.ts && ts-node prisma/seed/skill-cards.ts",
     "seed:curriculum": "ts-node prisma/seed/curriculum.ts",
     "seed:curriculum-m6": "ts-node prisma/seed/curriculum-m6.ts",
+    "seed:curriculum-m8": "ts-node prisma/seed/curriculum-m8.ts",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "prepare": "node -e \"if(!process.env.CI){require('child_process').execSync('husky install',{stdio:'inherit'})}\""
