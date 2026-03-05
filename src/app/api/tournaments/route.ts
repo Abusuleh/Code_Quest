@@ -32,3 +32,25 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ tournament });
 }
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "FORBIDDEN" }, { status: 403 });
+  }
+
+  const tournaments = await prisma.tournament.findMany({
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      startsAt: true,
+      endsAt: true,
+      isActive: true,
+      createdAt: true,
+    },
+  });
+
+  return NextResponse.json({ tournaments });
+}

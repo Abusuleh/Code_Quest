@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { TournamentPanel } from "./TournamentPanel";
 
 export default async function AdminDashboardPage() {
   const session = await getServerSession(authOptions);
@@ -128,6 +129,8 @@ export default async function AdminDashboardPage() {
             </div>
           )}
         </section>
+
+        <TournamentPanel />
       </div>
     </main>
   );
